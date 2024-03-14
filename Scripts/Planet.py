@@ -29,14 +29,14 @@ class Planet:
 if __name__=='__main__':
     app= Ursina()
     planet=Planet()
-    jupiter=planet.Create_entity(model='sphere', texture_path=r"..\Assets\jupiter.jpg",radius=3,tilt=45)
+    jupiter=planet.Create_entity(model='sphere', texture_path=r"..\Assets\jupiter.png",radius=3,tilt=45)
     jupiter.pos(0,0,0)
     
     def update():
-        y_val_l_r=100*(held_keys['d'] or held_keys['right arrow']) * time.dt
-        y_val_r_l=100*(held_keys['a'] or held_keys['left arrow']) * time.dt
-        x_val_d_u=100*(held_keys['w'] or held_keys['up arrow']) * time.dt
-        x_val_u_d=100*(held_keys['s'] or held_keys['down arrow']) * time.dt
+        y_val_l_r= 100 * ( held_keys['d'] or held_keys['right arrow'] ) * time.dt
+        y_val_r_l= 100 * ( held_keys['a'] or held_keys['left arrow'] ) * time.dt
+        x_val_d_u= 100 * ( held_keys['w'] or held_keys['up arrow'] ) * time.dt
+        x_val_u_d= 100 * ( held_keys['s'] or held_keys['down arrow'] ) * time.dt
 
 
         jupiter.rotation(left_to_right_rotation=True,axis='y',rotation_value=y_val_l_r)
