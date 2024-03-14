@@ -21,8 +21,8 @@ class Planet:
             absolute_rotation_value=abs(rotation_value)
             if left_to_right_rotation:
                 rotation_value*=-1
-            if axis=='x':
-                self.obj.rotate(Vec3(rotation_value,0,0))   
+            if axis=='z':
+                self.obj.rotate(Vec3(0,0,rotation_value))   
             elif axis=='y':
                 self.obj.rotate(Vec3(0,rotation_value,0))
 
@@ -43,13 +43,13 @@ if __name__=='__main__':
         if not(jupiter.autorotation):
             y_val_l_r=100*(held_keys['d'] or held_keys['right arrow']) * time.dt
             y_val_r_l=100*(held_keys['a'] or held_keys['left arrow']) * time.dt
-            x_val_d_u=100*(held_keys['w'] or held_keys['up arrow']) * time.dt
-            x_val_u_d=100*(held_keys['s'] or held_keys['down arrow']) * time.dt
+            z_val_d_u=100*(held_keys['w'] or held_keys['up arrow']) * time.dt
+            z_val_u_d=100*(held_keys['s'] or held_keys['down arrow']) * time.dt
            
             jupiter.rotation(left_to_right_rotation=True,axis='y',rotation_value=y_val_l_r)
             jupiter.rotation(left_to_right_rotation=False,axis='y',rotation_value=y_val_r_l)
-            jupiter.rotation(left_to_right_rotation=True,axis='x',rotation_value=x_val_u_d)
-            jupiter.rotation(left_to_right_rotation=False,axis='x',rotation_value=x_val_d_u)
+            jupiter.rotation(left_to_right_rotation=True,axis='z',rotation_value=z_val_d_u)
+            jupiter.rotation(left_to_right_rotation=False,axis='z',rotation_value=z_val_u_d)
             
         else:
             jupiter.rotation(left_to_right_rotation=True,axis='y',rotation_value=1)
