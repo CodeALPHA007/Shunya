@@ -1,5 +1,4 @@
 from ursina import *
-from PIL import Image
 
 PI= 3.14
 class Planet:
