@@ -3,6 +3,9 @@ import numpy as np
 from ursina.prefabs.trail_renderer import TrailRenderer
 from ursina import *
 
+from collections import deque
+
+
 relativeMultiplier = 0.00001
 G = 6.67e-11
 G_MODIFIED = 6.67e-21
@@ -38,6 +41,8 @@ window.color = color.black
     camera.position = Vec3(0, 0, -4000)
     cam = True """
 
+max_zoom=-30000
+min_zoom=-350
 camera.position = (0, 0, -10000)
 
 def cameraControl():
@@ -55,11 +60,10 @@ camera.clip_plane_far_setter(40000)
 earth = Entity(model='sphere', texture='earth.jpg', scale=RADIUS_EARTH)
 moon = Entity(model='sphere', texture='moon.jpg', scale=RADIUS_MOON)
 moon.position = Vec3(RADIUS_EARTH_MOON, 0, 0)
-#moon_trail = TrailRenderer(parent = moon, )
-""" trail_renderers = []
-for i in range(1):
-    tr = TrailRenderer(size=[1,1], segments=8, min_spacing=0.5, fade_speed=0, parent=moon, color_gradient=[color.magenta, color.cyan.tint(-.5), color.clear])
-    trail_renderers.append(tr) """
+
+trail = deque([], maxlen=1000)
+curve_renderer=Entity()
+
 t = 0
 dt = 500
 """ r = moon.position - earth.position
@@ -71,7 +75,7 @@ print(orbitalVelocity)
 
 def update():
 
-    global t, MOON_MOMENTUM, EARTH_MOMENTUM
+    global t, MOON_MOMENTUM, EARTH_MOMENTUM,curve_renderer,trail
     #if cam == False:
        #cameraSetup()
     #cameraSetup()
@@ -85,6 +89,14 @@ def update():
     moon.position = moon.position + MOON_MOMENTUM*dt/MASS_MOON
     earth.position = earth.position + EARTH_MOMENTUM*dt/MASS_EARTH
     t = t + dt
+
+    
+    trail.append(moon.position)
+    destroy(curve_renderer)
+    try:
+        curve_renderer = Entity(model=Mesh(vertices=trail, mode='line'),color=color.tint(color.random_color(),-.2 ))
+    except:
+        pass
     #print(moon.position)
     #print(MOON_MOMENTUM)
     print(earth.position)
