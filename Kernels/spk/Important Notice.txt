@@ -1,0 +1,5 @@
+Due to size restriction of github (25mb) the de430.bsp kernel (size 114 MB) could not be stored here
+please download the same from the following link
+
+https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/
+#https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de430.bsp
