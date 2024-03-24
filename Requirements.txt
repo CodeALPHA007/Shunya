@@ -9,3 +9,5 @@ pyqt_slideshow
 math
 PIL
 collections
+xarray
+cftime
