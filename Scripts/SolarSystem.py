@@ -4,10 +4,11 @@ import datetime
 import math
 from collections import deque
 import time
+import pandas as pd
 
 spiceypy.furnsh("../Kernels/lsk/naif0012.tls")
 spiceypy.furnsh("../Kernels/spk/de430s.bsp")
-import pandas as pd
+
 dates=[]
 start_date = '{}-01-01'
 end_date = '{}-12-31'
