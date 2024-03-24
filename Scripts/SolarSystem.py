@@ -28,7 +28,7 @@ def gen_pos(target: int, cur_et):
 def gen_dates(start_date,end_date):
     global dates
     dates.clear()
-    dates=list(xr.cftime_range(start_date, end_date, freq='M'))
+    dates=list(xr.cftime_range(start_date, end_date, freq='D'))
     #dates = list(pd.date_range(start_date, end_date, freq='M'))
 
 gen_dates(start_date.format(year),end_date.format(year))
@@ -53,6 +53,7 @@ jupiter=Entity(model='sphere', scale = 0.1, color=color.yellow)
 saturn=Entity(model='sphere', scale = 0.1, color=color.orange)
 uranus=Entity(model='sphere', scale = 0.1, color=color.red)
 neptune=Entity(model='sphere', scale = 0.1, color=color.pink)
+pluto=Entity(model='sphere', scale = 0.1, color=color.white)
 
 mercury_text=Text(text='MERCURY')
 venus_text=Text(text='VENUS')
@@ -62,7 +63,7 @@ jupiter_text=Text(text='JUPITER')
 saturn_text=Text(text='SATURN')
 uranus_text=Text(text='URANUS')
 neptune_text=Text(text='NEPTUNE')
-
+pluto_text=Text(text='PLUTO')
 
 trail_mercury=deque([],maxlen=100)
 trail_venus=deque([],maxlen=100)
@@ -72,6 +73,7 @@ trail_jupiter=deque([],maxlen=100)
 trail_saturn=deque([],maxlen=100)
 trail_uranus=deque([],maxlen=100)
 trail_neptune=deque([],maxlen=100)
+trail_pluto=deque([],maxlen=100)
 
 curve_renderer_mercury=Entity()
 curve_renderer_venus=Entity()
@@ -81,6 +83,7 @@ curve_renderer_jupiter=Entity()
 curve_renderer_saturn=Entity()
 curve_renderer_uranus=Entity()
 curve_renderer_neptune=Entity()
+curve_renderer_pluto=Entity()
 
 camera.position=Vec3(0,10,-100)
 camera.look_at(neptune)
@@ -100,11 +103,11 @@ def update():
     global trail_mercury,trail_venus,trail_earth,trail_mars,trail_jupiter,trail_saturn,trail_uranus,trail_neptune
     global curve_renderer_mercury,curve_renderer_venus,curve_renderer_earth
     global curve_renderer_mars,curve_renderer_jupiter,curve_renderer_saturn
-    global curve_renderer_uranus,curve_renderer_neptune
+    global curve_renderer_uranus,curve_renderer_neptune,curve_renderer_pluto
 
     global mercury_text,venus_text,earth_text
     global mars_text,jupiter_text,saturn_text
-    global uranus_text,neptune_text
+    global uranus_text,neptune_text,pluto_text
 
     cur_year_txt.text = year_text.format(year,camera.z) 
 
@@ -143,6 +146,11 @@ def update():
     neptune.position=gen_pos(8,cur_et)
     print(neptune_text.world_position)
     neptune_text.world_position=neptune.position
+
+    pluto.position=gen_pos(9,cur_et)
+    pluto_text.world_position=pluto.position
+    
+
     
     trail_mercury.append(mercury.position)
     trail_venus.append(venus.position)
@@ -152,6 +160,7 @@ def update():
     trail_saturn.append(saturn.position)
     trail_uranus.append(uranus.position)
     trail_neptune.append(neptune.position)
+    trail_pluto.append(pluto.position)
     
     
     destroy(curve_renderer_mercury)
@@ -161,8 +170,8 @@ def update():
     destroy(curve_renderer_jupiter)
     destroy(curve_renderer_saturn)
     destroy(curve_renderer_uranus)
-    
     destroy(curve_renderer_neptune)
+    destroy(curve_renderer_pluto)
     
     try:
         thick=0.05
@@ -176,7 +185,8 @@ def update():
         curve_renderer_uranus= Entity(model=Mesh(vertices=trail_uranus, mode='line',thickness=thick),color=color.red )
     
         curve_renderer_neptune= Entity(model=Mesh(vertices=trail_neptune, mode='line',thickness=thick),color=color.pink )
-        
+        curve_renderer_pluto= Entity(model=Mesh(vertices=trail_pluto, mode='line',thickness=thick),color=color.white )
+    
         
     except:
         pass
