@@ -1,0 +1,11 @@
+Ursina
+PyQt5
+Pandas
+Spiceypy
+os
+subprocess
+opencv
+pyqt_slideshow
+math
+PIL
+collections
