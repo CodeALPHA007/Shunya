@@ -6,6 +6,36 @@ from PyQt5.QtCore import *
 from pyqt_slideshow import SlideShow
 import os
 import sys
+import numpy as np
+import cv2
+
+class VideoThread(QThread):
+    change_pixmap_signal = pyqtSignal(np.ndarray)
+
+    def __init__(self):
+        super().__init__()
+        self._run_flag = True
+
+    def run(self):
+        # capture from web cam
+        cap = cv2.VideoCapture("C:\\Users\\Atreyee\\Desktop\\Python scripts\\Assets\\Back.mp4")
+        frame_counter = 0
+        while self._run_flag:
+            ret, cv_img = cap.read()
+            frame_counter += 1
+            #If the last frame is reached, reset the capture and the frame_counter
+            if frame_counter == (cap.get(cv2.CAP_PROP_FRAME_COUNT)-1):
+                frame_counter = 0 #Or whatever as long as it is the same as next line
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            if ret:
+                self.change_pixmap_signal.emit(cv_img)
+        # shut down capture system
+        cap.release()
+
+    def stop(self):
+        """Sets run flag to False and waits for thread to finish"""
+        self._run_flag = False
+        self.wait()
 
 class Show_NewWin(QWidget):
     def __init__(self):
@@ -52,8 +82,8 @@ class Show_NewWin(QWidget):
         self.button('Mars', s, (400, 150, 100, 50)).clicked.connect(self.show_message)
         self.button('Jupiter', s, (100, 250, 100, 50)).clicked.connect(self.show_message)
         self.button('Saturn', s, (200, 250, 100, 50)).clicked.connect(self.show_message)
-        self.button('Neptune', s, (300, 250, 100, 50)).clicked.connect(self.show_message)
-        self.button('Uranus', s, (400, 250, 100, 50)).clicked.connect(self.show_message)
+        self.button('Uranus', s, (300, 250, 100, 50)).clicked.connect(self.show_message)
+        self.button('Neptune', s, (400, 250, 100, 50)).clicked.connect(self.show_message)
 
         self.button('Credits', s, ((10,60,100,50))).clicked.connect(self.show_dia)
 
@@ -194,6 +224,16 @@ class NewWin(QWidget):
         self.setWindowOpacity(1.0)        
         self.setGeometry(150, 150, 800, 500)
 
+        # create the label that holds the image
+        self.image_label = QLabel(self)
+        self.image_label.setGeometry(10, 10, 780,475)
+        # create the video capture thread
+        self.thread = VideoThread()
+        # connect its signal to the update_image slot
+        self.thread.change_pixmap_signal.connect(self.update_image)
+        # start the thread
+        self.thread.start()
+
         #Planets
         self.button('Mercury', (100, 150, 100, 50)).clicked.connect(self.show_message)
         self.button('Venus', (200, 150, 100, 50)).clicked.connect(self.show_message)
@@ -201,13 +241,32 @@ class NewWin(QWidget):
         self.button('Mars', (400, 150, 100, 50)).clicked.connect(self.show_message)
         self.button('Jupiter', (100, 250, 100, 50)).clicked.connect(self.show_message)
         self.button('Saturn', (200, 250, 100, 50)).clicked.connect(self.show_message)
-        self.button('Neptune', (300, 250, 100, 50)).clicked.connect(self.show_message)
-        self.button('Uranus', (400, 250, 100, 50)).clicked.connect(self.show_message)
+        self.button('Uranus', (300, 250, 100, 50)).clicked.connect(self.show_message)
+        self.button('Neptune', (400, 250, 100, 50)).clicked.connect(self.show_message)
 
         settings_button = self.button("Setting",((10,10,100,50)))
         settings_button.setIcon(QIcon("C:\\Users\\Atreyee\\Desktop\\Python scripts\\Assets\\settings.png"))
         settings_button.clicked.connect(self.show_dialog)
 
+    def closeEvent(self, event):
+        self.thread.stop()
+        event.accept()
+
+    @pyqtSlot(np.ndarray)
+    def update_image(self, cv_img):
+        """Updates the image_label with a new opencv image"""
+        qt_img = self.convert_cv_qt(cv_img)
+        self.image_label.setPixmap(qt_img)
+    
+    def convert_cv_qt(self, cv_img):
+        """Convert from an opencv image to QPixmap"""
+        rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+        h, w, ch = rgb_image.shape
+        bytes_per_line = ch * w
+        convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        p = convert_to_Qt_format.scaled(900, 900, Qt.KeepAspectRatio)
+        return QPixmap.fromImage(p)
+    
     def show_dialog(self):
         dlg = QDialog(self)
         dlg.move(650,350)
@@ -286,6 +345,16 @@ class MainWindow(QMainWindow):
         self.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(20, 34, 195), stop: 1 rgb(0, 100, 25) );")
         self.setWindowOpacity(1.0)        
         self.setGeometry(150, 150, 800, 500)
+
+        # create the label that holds the image
+        self.image_label = QLabel(self)
+        self.image_label.setGeometry(10, 10, 780,475)
+        # create the video capture thread
+        self.thread = VideoThread()
+        # connect its signal to the update_image slot
+        self.thread.change_pixmap_signal.connect(self.update_image)
+        # start the thread
+        self.thread.start()
   
         str_planets = 'Planets'
         self.button(str_planets, ((200,150,100,50))).clicked.connect(self.show_new_window)
@@ -304,6 +373,25 @@ class MainWindow(QMainWindow):
         settings_button.setIcon(QIcon("C:\\Users\\Atreyee\\Desktop\\Python scripts\\Assets\\settings.png"))
         settings_button.clicked.connect(self.show_dialog)
 
+    def closeEvent(self, event):
+        self.thread.stop()
+        event.accept()
+
+    @pyqtSlot(np.ndarray)
+    def update_image(self, cv_img):
+        """Updates the image_label with a new opencv image"""
+        qt_img = self.convert_cv_qt(cv_img)
+        self.image_label.setPixmap(qt_img)
+    
+    def convert_cv_qt(self, cv_img):
+        """Convert from an opencv image to QPixmap"""
+        rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+        h, w, ch = rgb_image.shape
+        bytes_per_line = ch * w
+        convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        p = convert_to_Qt_format.scaled(900, 900, Qt.KeepAspectRatio)
+        return QPixmap.fromImage(p)
+    
     def show_dialog(self):
         dlg = QDialog(self)
         dlg.move(650,350)
