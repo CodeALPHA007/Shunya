@@ -247,18 +247,18 @@ def update():
         try:
             thick=0.05
         
-            curve_renderer_mercury= Entity(model=Mesh(vertices=trail_mercury, mode='line',thickness=thick),color=color.violet )
-            curve_renderer_venus= Entity(model=Mesh(vertices=trail_venus, mode='line',thickness=thick),color=color.cyan )
-            curve_renderer_earth= Entity(model=Mesh(vertices=trail_earth, mode='line',thickness=thick),color=color.blue )
-            curve_renderer_moon= Entity(model=Mesh(vertices=trail_moon, mode='line',thickness=thick),color=color.blue )
+            curve_renderer_mercury= Entity(model=Mesh(vertices=trail_mercury, mode='point',thickness=thick),color=color.violet )
+            curve_renderer_venus= Entity(model=Mesh(vertices=trail_venus, mode='point',thickness=thick),color=color.cyan )
+            curve_renderer_earth= Entity(model=Mesh(vertices=trail_earth, mode='point',thickness=thick),color=color.blue )
+            curve_renderer_moon= Entity(model=Mesh(vertices=trail_moon, mode='point',thickness=thick),color=color.blue )
             
-            curve_renderer_mars= Entity(model=Mesh(vertices=trail_mars, mode='line',thickness=thick),color=color.green )
-            curve_renderer_jupiter= Entity(model=Mesh(vertices=trail_jupiter, mode='line',thickness=thick),color=color.yellow )
-            curve_renderer_saturn= Entity(model=Mesh(vertices=trail_saturn, mode='line',thickness=thick),color=color.orange )
-            curve_renderer_uranus= Entity(model=Mesh(vertices=trail_uranus, mode='line',thickness=thick),color=color.red )
+            curve_renderer_mars= Entity(model=Mesh(vertices=trail_mars, mode='point',thickness=thick),color=color.green )
+            curve_renderer_jupiter= Entity(model=Mesh(vertices=trail_jupiter, mode='point',thickness=thick),color=color.yellow )
+            curve_renderer_saturn= Entity(model=Mesh(vertices=trail_saturn, mode='point',thickness=thick),color=color.orange )
+            curve_renderer_uranus= Entity(model=Mesh(vertices=trail_uranus, mode='point',thickness=thick),color=color.red )
         
-            curve_renderer_neptune= Entity(model=Mesh(vertices=trail_neptune, mode='line',thickness=thick),color=color.pink )
-            curve_renderer_pluto= Entity(model=Mesh(vertices=trail_pluto, mode='line',thickness=thick),color=color.white )
+            curve_renderer_neptune= Entity(model=Mesh(vertices=trail_neptune, mode='point',thickness=thick),color=color.pink )
+            curve_renderer_pluto= Entity(model=Mesh(vertices=trail_pluto, mode='point',thickness=thick),color=color.white )
         
             
         except:
