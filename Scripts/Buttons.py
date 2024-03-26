@@ -30,7 +30,7 @@ cam_right = Button(icon='..\Assets\\right.png', scale=.05, name = 'camera right'
 cam_right.tooltip = Tooltip('Rolls right')
 
 #entity
-entity= Entity(model='sphere', scale=(3, 3, 3),  texture='..\Assets\jupiter.png')
+entity= Entity(model='sphere', scale=(3, 3, 3))
 
 toggle = Button(parent=camera.ui, scale=.1, origin=(-7.5,2.75), icon = '..\Assets\Switch.png', text='zooming options', text_origin=(-0.2,-1))
 toggle.tooltip = Tooltip('For free camera')
