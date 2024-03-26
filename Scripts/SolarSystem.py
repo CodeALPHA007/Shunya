@@ -50,22 +50,22 @@ year_text='<red>YEAR</red>\n<green>{}</green><red>\nZoom</red>\n<green>{}</green
 cur_year_txt = Text(scale=1,position=(-0.85,0.45,0))
 
 
-sun=Entity(model='sphere',scale=km2au(696000),texture=r"..\Assets\sun.jpg", color=color.white)
+sun=Entity(model='sphere',scale=km2au(696000),texture="..\Assets\Sun.jpg", color=color.white)
 sun.position=Vec3(0,0,0)
 
-mercury=Entity(model='sphere', scale = km2au(2439),texture=r"..\Assets\mercury.jpg", color=color.violet)
-venus=Entity(model='sphere', scale = km2au(6052), color=color.cyan)
+mercury=Entity(model='sphere', scale = km2au(2439),texture=r"..\Assets\mercury.png")
+venus=Entity(model='sphere', scale = km2au(6052), texture=r"..\Assets\venus_atmosphere.png")
 
-earth=Entity(model='sphere',texture=r"..\Assets\earth4k.jpg", scale = km2au(6387))
+earth=Entity(model='sphere',texture=r"..\Assets\earth.jpg", scale = km2au(6387))
 
-moon=Entity(model='sphere', scale = km2au(1738),color=color.white)
+moon=Entity(model='sphere', scale = km2au(1738), texture="..\Assets\moon.jpg")
 
-mars=Entity(model='sphere', scale = km2au(3393), color=color.green)
+mars=Entity(model='sphere', scale = km2au(3393), texture="..\Assets\mars.png")
 jupiter=Entity(model='sphere', texture="..\Assets\jupiter.png",scale = km2au(71398))
-saturn=Entity(model='sphere', scale = km2au(60000), color=color.orange)
-uranus=Entity(model='sphere', scale = km2au(25559), color=color.red)
-neptune=Entity(model='sphere', scale = km2au(24800), color=color.pink)
-pluto=Entity(model='sphere', scale = km2au(1140), color=color.white)
+saturn=Entity(model='sphere', scale = km2au(60000), texture="..\Assets\saturn.png")
+uranus=Entity(model='sphere', scale = km2au(25559), texture=r"..\Assets\uranus.png")
+neptune=Entity(model='sphere', scale = km2au(24800), texture=r"..\Assets\neptune.png")
+pluto=Entity(model='sphere', scale = km2au(1140), texture="..\Assets\moon.jpg", color=color.white)
 
 mercury_text=Text(text='MERCURY',scale=0.5)
 venus_text=Text(text='VENUS')
@@ -103,13 +103,59 @@ curve_renderer_pluto=Entity()
 
 zoom_field = InputField(x=-.45, default_value='earth', active=True,color=color.white,text_color=color.red)
 
+follow = {
+    mercury: False,
+    venus: False,
+    earth: False,
+    mars: False,
+    jupiter: False,
+    saturn: False,
+    uranus: False,
+    neptune: False,
+    moon: False
+}
+
+def resetFollow(dict):
+    for i in dict:
+        dict[i] = False
+
 follow_earth=False
 def goto():
-    global follow_earth,zoom_field,camera
+    global follow_earth,zoom_field,camera, follow
     x=zoom_field.text
     print(x)
     if x=='earth':  
-        follow_earth=True
+        follow[earth] = True
+    elif x=="mars":
+        resetFollow(follow)
+        follow[mars] = True
+    elif x=="mercury":
+        resetFollow(follow)
+        follow[mercury] = True
+    elif x=="venus":
+        resetFollow(follow)
+        follow[venus] = True
+    elif x=="jupiter":
+        resetFollow(follow)
+        follow[jupiter] = True
+    elif x=="saturn":
+        resetFollow(follow)
+        follow[saturn] = True
+    elif x=="uranus":
+        resetFollow(follow)
+        follow[uranus] = True
+    elif x=="neptune":
+        resetFollow(follow)
+        follow[neptune] = True
+    elif x=="moon":
+        resetFollow(follow)
+        follow[moon] = True
+    else:
+        for i in follow:
+            follow[i] = False
+
+        camera.position = Vec3(0, 0, -20)
+        camera.look_at(sun)
 
 zoom_b=Button(x=-.35,y=-0.10, text='GO TO', active=True,color=color.green,text_color=color.red,on_click=goto)
 zoom_b.fit_to_text()
@@ -144,6 +190,7 @@ def input(key):
                 
 def update():
     
+    print(camera.position)
     global follow_earth
 
     camera.z+=1000* held_keys['w']*time.dt
@@ -177,8 +224,46 @@ def update():
         year+=1
         gen_dates(start_date.format(year),end_date.format(year))
         i=0
-        print(year)
+        #print(year)
     cur_et=spiceypy.utc2et(cur_utc)
+
+
+    
+    if follow[earth] == True:
+        camera.look_at(earth)
+        camera.position=gen_pos(399,cur_et)+Vec3(0.1,0.1,0.1)
+    
+    if follow[mars] == True:
+        camera.look_at(mars)
+        camera.position=gen_pos(4,cur_et)+Vec3(0, 0, 1)
+    
+    if follow[jupiter] == True:
+        camera.look_at(jupiter)
+        camera.position=gen_pos(5,cur_et)+Vec3(0, 0, 2)
+    
+    if follow[saturn] == True:
+        camera.look_at(saturn)
+        camera.position=gen_pos(6,cur_et)+Vec3(0, 0, 2)
+
+    if follow[uranus] == True:
+        camera.look_at(uranus)
+        camera.position=gen_pos(7,cur_et)+Vec3(0, 0, 2)
+
+    if follow[neptune] == True:
+        camera.look_at(neptune)
+        camera.position=gen_pos(8,cur_et)+Vec3(0, 0, 2)
+
+    if follow[mercury] == True:
+        camera.look_at(mercury)
+        camera.position=gen_pos(1,cur_et)+Vec3(0.1,0.1,0.1)
+
+    if follow[venus] == True:
+        camera.look_at(venus)
+        camera.position=gen_pos(2,cur_et)+Vec3(0.1,0.1,0.1)
+       
+    if follow[moon] == True:
+        camera.look_at(moon)
+        camera.position=gen_pos(301,cur_et)+Vec3(0.1,0.1,0.1)
 
     mercury.position=gen_pos(1,cur_et)
     mercury_text.world_position=mercury.position
@@ -186,12 +271,6 @@ def update():
     
     venus.position=gen_pos(2,cur_et)
     venus_text.world_position=venus.position
-    
-    if follow_earth:
-        camera.look_at(earth)
-        camera.position=gen_pos(399,cur_et)+Vec3(0.1,0.1,0.1)
-       
-
         
     earth.position=gen_pos(399,cur_et)
     earth_text.world_position=earth.position
