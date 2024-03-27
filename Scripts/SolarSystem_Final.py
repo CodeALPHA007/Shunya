@@ -234,9 +234,9 @@ def input(key):
     global sun,toggle_trail,mouse_enabled_movement
     if key=='scroll up':
         if not camera.intersects().hit:
-            camera.position +=camera.forward*5
+            camera.position +=camera.forward*abs(camera.z)*0.05
     elif key=='scroll down':
-        camera.position +=camera.back*5
+        camera.position +=camera.back*abs(camera.z)*0.05
     elif key=='m':
         mouse_enabled_movement=not(mouse_enabled_movement)  
     elif key=='t':
