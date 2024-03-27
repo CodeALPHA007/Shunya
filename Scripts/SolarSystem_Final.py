@@ -132,7 +132,7 @@ toggle_free=False
 camera.parent=scene
 default_zoom=-20
 camera.z=default_zoom
-camera.collider=BoxCollider(camera,center=Vec3(0,0,5),size=(5,5,5))
+camera.collider=BoxCollider(camera,center=Vec3(0,0,5),size=(5,5,20))
 camera.collider.visible=False
 camera.clip_plane_far_setter(150000)            
 
