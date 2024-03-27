@@ -51,24 +51,20 @@ year_text='<red>YEAR</red>\n<green>{}</green><red>\nZoom</red>\n<green>{}</green
 cur_year_txt = Text(scale=1,position=(-0.85,0.45,0))
 
 
-sun=Entity(model='sphere',scale=km2au(696000),texture=r"..\Assets\sun.jpg", color=color.white)
+sun=Entity(name='Sun', model='sphere',scale=km2au(696000),texture=r"..\Assets\sun.jpg",collider='box')
 sun.position=Vec3(0,0,0)
 
-mercury=Entity(model='sphere', scale = km2au(2439), color=color.violet)
-venus=Entity(model='sphere', scale = km2au(6052), color=color.cyan)
+mercury=Entity(name='Mercury', model='sphere',texture=r"..\Assets\mercurymap.jpg", scale = km2au(2439),collider='box')
+venus=Entity(name='Venus', model='sphere', scale = km2au(6052),collider='box', color=color.cyan)
+earth=Entity(name='Earth',model='sphere',texture=r"..\Assets\earth4k.jpg",collider='box', scale = km2au(6387))
+moon=Entity(name='Moon', model='sphere', texture=r"..\Assets\moonmap4k.jpg" ,scale = km2au(1738),collider='box', color=color.white)
+mars=Entity(name=' Mars', model='sphere', scale = km2au(3393),collider='box', color=color.green)
+jupiter=Entity(name='Jupiter',model='sphere', texture="..\Assets\jupiter.png",scale = km2au(71398),collider='box')
+saturn=Entity(name='Saturn', model='sphere', scale = km2au(60000),collider='box', color=color.orange)
+uranus=Entity(name='Uranus', model='sphere', scale = km2au(25559),collider='box', color=color.red)
+neptune=Entity(name='Neptune', model='sphere', scale = km2au(24800),collider='box', color=color.pink)
+pluto=Entity(name='Pluto', model='sphere', scale = km2au(1140),collider='box', color=color.white)
 
-earth=Entity(name='Earth',model='sphere',texture=r"..\Assets\earth4k.jpg", scale = km2au(6387))
-earth.collider = BoxCollider(earth, center=Vec3(0,0,0), size=earth.scale*50)
-earth.collider.visible=True
-
-moon=Entity(model='sphere', scale = km2au(1738),color=color.white)
-
-mars=Entity(model='sphere', scale = km2au(3393), color=color.green)
-jupiter=Entity(model='sphere', texture="..\Assets\jupiter.png",scale = km2au(71398))
-saturn=Entity(model='sphere', scale = km2au(60000), color=color.orange)
-uranus=Entity(model='sphere', scale = km2au(25559), color=color.red)
-neptune=Entity(model='sphere', scale = km2au(24800), color=color.pink)
-pluto=Entity(model='sphere', scale = km2au(1140), color=color.white)
 
 mercury_text=Text(text='MERCURY',scale=0.5)
 venus_text=Text(text='VENUS')
@@ -104,9 +100,8 @@ curve_renderer_uranus=Entity()
 curve_renderer_neptune=Entity()
 curve_renderer_pluto=Entity()
 
-zoom_field = InputField(x=-.60,y=-0.45, default_value='earth', active=False,color=color.white,text_color=color.red)
 
-follow_earth=False
+zoom_on=True
 def goto():
     global follow_earth,zoom_field,camera
     x=zoom_field.text
@@ -131,17 +126,33 @@ def set_all_follow_false():
     for i in planets_info.keys():
         planets_info[i]['follow']=False
 
+current_focus='sun'
+toggle_free=False
+
+camera.parent=scene
+default_zoom=-20
+camera.z=default_zoom
+camera.collider=BoxCollider(camera,center=Vec3(0,0,5),size=(5,5,5))
+camera.collider.visible=False
+camera.clip_plane_far_setter(150000)            
+
+
 def set_follow(planet_name: str):
-    global planets_info
+    global planets_info,current_focus,toggle_free
     set_all_follow_false()
-    planets_info[planet_name]['follow']=True
+    if planet_name=='free':
+        toggle_free=True
+        camera.parent=scene
+        camera.position=Vec3(0,0,-20)
+    else:
+        toggle_free=False
+        planets_info[planet_name]['follow']=True
+        current_focus=planet_name
 
 
-zoom_b=Button(x=-.30,y=-0.45, text='GO TO', active=True,color=color.green,text_color=color.red,on_click=goto)
-zoom_b.fit_to_text()
 
-
-button_list=[DropdownMenuButton('Sun',on_click=Func(set_follow,'sun')),
+button_list=[DropdownMenuButton('Free rotation',on_click=Func(set_follow,'free')),
+             DropdownMenuButton('Sun',on_click=Func(set_follow,'sun')),
              DropdownMenuButton('Mercury',on_click=Func(set_follow,'mercury')),
              DropdownMenuButton('Venus',on_click=Func(set_follow,'venus')),
              DropdownMenu(text='Earth and Moon',buttons=[DropdownMenuButton('Earth',on_click=Func(set_follow,'earth')),
@@ -165,49 +176,46 @@ drop_menu=DropdownMenu(x=-.60,y=0.45,text='FOCUS ON',
 
 #camera.position=Vec3(0,10,-100)
 #camera.look_at(sun)
-original_camera=EditorCamera(position=(0,0,-10))
-original_camera.collider=BoxCollider(camera, center=Vec3(0,0,0), size=Vec3(10,10,10))
-camera.clip_plane_far_setter(150000)
-
-focus_cam_entity=Entity()
-focus_cam_entity.collider=BoxCollider(focus_cam_entity, center=Vec3(0,0,0), size=Vec3(0.5,0.5,0.5))
-
-focus_camera=EditorCamera()
-focus_camera.parent=focus_cam_entity
-print(focus_camera.name)
-camera.clip_plane_far_setter(150000)
-focus_camera.disable()
-
 def magnitude(vector):
     return numpy.linalg.norm(vector)
 
 def focus(planet_name: str, cur_et):
-    global planets_info,focus_camera,original_camera
-    if planet_name=='sun':
-        original_camera.enable()
-        focus_camera.disable()
-    
-    elif planets_info[planet_name]['follow']:
-        temp_planet_id=planets_info[planet_name]['planet_id']
-        temp_planet_entity=planets_info[planet_name]['entity']
-        #original_camera.disable()
-        focus_camera.enable()
-        #focus_camera.position=gen_pos(temp_planet_id,cur_et)
-        focus_cam_entity.position=gen_pos(temp_planet_id,cur_et)
-        focus_camera.look_at(temp_planet_entity)
-        #focus_cam_entity.collider.position=camera.position
-        focus_camera.ignore=True
-        focus_cam_entity.collider.world_position=focus_cam_entity.world_position
-        hit_info=original_camera.intersects(debug=True)
-        if hit_info.hit:
-            print(hit_info.entity.name)
+    global planets_info,default_zoom
+    if planets_info[planet_name]['follow']:
+        if planet_name=='sun':
+            
+            camera.parent=sun
+            #camera.collider=BoxCollider(camera,center=Vec3(0,0,0),size=(10,10,10))
+            
+            camera.look_at(sun)
+            camera.position=(0,10,default_zoom)
+            camera.look_at(sun)
+            planets_info['sun']['follow']=False
+        
+        else:
+            
+            camera.position=Vec3(0,0,default_zoom)
+            camera.rotation=Vec3(0,0,0)
+            camera.parent=planets_info[planet_name]['entity']
+            
+            #camera.set_position=planets_info[planet_name]['entity'].position.up*2
+            #camera.collider=BoxCollider(camera,center=Vec3(0,0,10),size=(3,3,3))
+            #camera.collider.visible=True
+            #camera.z=default_zoom
+            camera.position=Vec3(0,0,0)
+            camera.z=default_zoom
+            planets_info[planet_name]['follow']=False
+            camera._always_on_top=True
+            
+        #focus_camera.rotate=Vec3(0,0,0)
         
 
             
 
 
+
 def input(key):
-    global sun,toggle_trail
+    global sun,toggle_trail,toggle_rotation
     if key=='t':
         if toggle_trail==True:
             global curve_renderer_mercury,curve_renderer_venus,curve_renderer_earth,curve_renderer_moon
@@ -229,23 +237,37 @@ def input(key):
                 pass    
         toggle_trail=not(toggle_trail)            
                 
+
+def camera_control():
+    
+    global toggle_free,current_focus,planets_info
+    
+    if not camera.intersects().hit: 
+        camera.position +=camera.forward *1000 * held_keys['w'] * time.dt
+    camera.position +=camera.back * 1000 * held_keys['s'] * time.dt
+    
+    if toggle_free:
+
+        camera.position +=camera.left * 100 * held_keys['a'] * time.dt
+        camera.position +=camera.right * 100 * held_keys['d'] * time.dt
+        camera.position +=camera.up * 100 * held_keys['z'] * time.dt
+        camera.position +=camera.down * 100 * held_keys['x'] * time.dt
+        
+        camera.rotation_x-=10 *held_keys['up arrow'] * time.dt
+        camera.rotation_x+=10 *held_keys['down arrow'] * time.dt
+        camera.rotation_y-=10 *held_keys['left arrow'] * time.dt
+        camera.rotation_y+=10 *held_keys['right arrow'] * time.dt
+        camera.rotation_z+=10 *held_keys['c'] * time.dt
+        camera.rotation_z-=10 *held_keys['v'] * time.dt
+
+
+delay_counter=0
+                
 def update():
     
-    global follow_earth
+    camera_control()
 
-    original_camera.z+=1000* held_keys['w']*time.dt
-    original_camera.z-=1000* held_keys['s']*time.dt    
-    original_camera.y-=100* held_keys['a']*time.dt
-    original_camera.y+=100* held_keys['d']*time.dt    
-    focus_camera.z+=100* held_keys['w']*time.dt
-    focus_camera.z-=100* held_keys['s']*time.dt    
-    focus_camera.y-=100* held_keys['a']*time.dt
-    focus_camera.y+=100* held_keys['d']*time.dt    
-    
-    
-
-    #camera.look_at(sun)
-
+    global follow_earth,zoom_on,delay_counter
     global last_time,cur_year_txt,year_text,curve_renderer,start_date,end_date,i,year,dates
     global trail_mercury,trail_venus,trail_earth,trail_moon,trail_mars,trail_jupiter,trail_saturn,trail_uranus,trail_neptune
     global curve_renderer_mercury,curve_renderer_venus,curve_renderer_earth,curve_renderer_moon
@@ -258,17 +280,22 @@ def update():
 
     global planets_info
     
-    if not(focus_camera.enabled):
-        cur_year_txt.text = year_text.format(year,original_camera.z) 
-    else:
-        cur_year_txt.text = year_text.format(year,camera.z) 
+    cur_year_txt.text = year_text.format(year,camera.z) 
 
+    delay_counter+=time.dt
 
+    #print(camera.world_position)
+
+    
     cur_utc=str(dates[i])
     cur_utc=cur_utc.replace(" ",'T')
-    i=(i+1)
+    if delay_counter>=1:
+        i=(i+1)
+        delay_counter=0
     if i==len(dates):
         year+=1
+        if year>=2649:
+            year=1550
         gen_dates(start_date.format(year),end_date.format(year))
         i=0
         print(year)
@@ -287,9 +314,9 @@ def update():
     venus.position=gen_pos(2,cur_et)
     venus_text.world_position=venus.position
     
-    focus('earth',cur_et)   
     earth.position=gen_pos(399,cur_et)
     earth_text.world_position=earth.position
+    focus('earth',cur_et)   
     
     focus('moon',cur_et)   
     moon.position=gen_pos(301,cur_et)
@@ -320,18 +347,18 @@ def update():
     pluto_text.world_position=pluto.position
     
 
-    
-    trail_mercury.append(mercury.position)
-    trail_venus.append(venus.position)
-    trail_earth.append(earth.position)
-    trail_moon.append(moon.position)
-    trail_mars.append(mars.position)
-    trail_jupiter.append(jupiter.position)
-    trail_saturn.append(saturn.position)
-    trail_uranus.append(uranus.position)
-    trail_neptune.append(neptune.position)
-    trail_pluto.append(pluto.position)
-    
+    if delay_counter==0:
+        trail_mercury.append(mercury.position)
+        trail_venus.append(venus.position)
+        trail_earth.append(earth.position)
+        trail_moon.append(moon.position)
+        trail_mars.append(mars.position)
+        trail_jupiter.append(jupiter.position)
+        trail_saturn.append(saturn.position)
+        trail_uranus.append(uranus.position)
+        trail_neptune.append(neptune.position)
+        trail_pluto.append(pluto.position)
+        
     
     if toggle_trail:
         destroy(curve_renderer_mercury)
@@ -366,4 +393,4 @@ def update():
 
         #time.sleep(0.5)
 
-app.run()    
+app.run()
