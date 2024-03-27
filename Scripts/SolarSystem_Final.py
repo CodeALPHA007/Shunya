@@ -136,6 +136,7 @@ camera.collider=BoxCollider(camera,center=Vec3(0,0,5),size=(5,5,20))
 camera.collider.visible=False
 camera.clip_plane_far_setter(150000)            
 
+drop_down_text='Focus on: {}'
 
 def set_follow(planet_name: str):
     global planets_info,current_focus,toggle_free
@@ -144,10 +145,11 @@ def set_follow(planet_name: str):
         toggle_free=True
         camera.parent=scene
         camera.position=Vec3(0,0,-20)
+        current_focus=None
     else:
         toggle_free=False
         planets_info[planet_name]['follow']=True
-        current_focus=planet_name
+        current_focus=planet_name    
 
 
 
@@ -168,10 +170,24 @@ button_list=[DropdownMenuButton('Free rotation',on_click=Func(set_follow,'free')
 
 
 
-drop_menu=DropdownMenu(x=-.60,y=0.45,text='FOCUS ON', 
+drop_menu=DropdownMenu(x=-.60,y=0.45,text=drop_down_text.format(current_focus), 
                        buttons=button_list,color=color.white,text_color=color.red,highlight_color=color.green,
                        scale=(0.3,0.03,0.0))
 
+mouse_enabled_movement=False
+
+def mouse_enabled_movement_function():
+    global mouse_enabled_movement,toggle_free
+    if not mouse_enabled_movement:
+        if toggle_free:
+            mouse_enabled_movement=True
+    else:
+        mouse_enabled_movement=False
+        
+mouse_text="Mouse control: {}"
+mouse_button=Button(y=0.43,text=mouse_text.format(mouse_enabled_movement),text_color=color.black,
+                    color=color.red,highlight_color=color.white,on_click=mouse_enabled_movement_function)
+mouse_button.fit_to_text()
 
 
 #camera.position=Vec3(0,10,-100)
@@ -180,10 +196,11 @@ def magnitude(vector):
     return numpy.linalg.norm(vector)
 
 def focus(planet_name: str, cur_et):
-    global planets_info,default_zoom
+    global planets_info,default_zoom,mouse_enabled_movement
+    
     if planets_info[planet_name]['follow']:
         if planet_name=='sun':
-            
+            mouse_enabled_movement=False
             camera.parent=sun
             #camera.collider=BoxCollider(camera,center=Vec3(0,0,0),size=(10,10,10))
             
@@ -193,7 +210,7 @@ def focus(planet_name: str, cur_et):
             planets_info['sun']['follow']=False
         
         else:
-            
+            mouse_enabled_movement=False
             camera.position=Vec3(0,0,default_zoom)
             camera.rotation=Vec3(0,0,0)
             camera.parent=planets_info[planet_name]['entity']
@@ -213,10 +230,16 @@ def focus(planet_name: str, cur_et):
             
 
 
-
 def input(key):
-    global sun,toggle_trail,toggle_rotation
-    if key=='t':
+    global sun,toggle_trail,mouse_enabled_movement
+    if key=='scroll up':
+        if not camera.intersects().hit:
+            camera.position +=camera.forward*5
+    elif key=='scroll down':
+        camera.position +=camera.back*5
+    elif key=='m':
+        mouse_enabled_movement=not(mouse_enabled_movement)  
+    elif key=='t':
         if toggle_trail==True:
             global curve_renderer_mercury,curve_renderer_venus,curve_renderer_earth,curve_renderer_moon
             global curve_renderer_mars,curve_renderer_jupiter,curve_renderer_saturn
@@ -240,11 +263,11 @@ def input(key):
 
 def camera_control():
     
-    global toggle_free,current_focus,planets_info
+    global toggle_free,current_focus,planets_info,mouse_enabled_movement
     
     if not camera.intersects().hit: 
-        camera.position +=camera.forward *1000 * held_keys['w'] * time.dt
-    camera.position +=camera.back * 1000 * held_keys['s'] * time.dt
+        camera.position +=camera.forward *100 * held_keys['w'] * time.dt
+    camera.position +=camera.back * 100 * held_keys['s'] * time.dt
     
     if toggle_free:
 
@@ -261,6 +284,15 @@ def camera_control():
         camera.rotation_z-=10 *held_keys['v'] * time.dt
 
 
+        if mouse_enabled_movement:
+            
+            print(mouse.position)
+            
+            camera.x+=abs(camera.z) * mouse.x * time.dt
+            camera.y+=abs(camera.z) * mouse.y * time.dt
+        
+
+        
 delay_counter=0
                 
 def update():
@@ -278,8 +310,16 @@ def update():
     global mars_text,jupiter_text,saturn_text
     global uranus_text,neptune_text,pluto_text
 
-    global planets_info
-    
+    global planets_info,drop_menu,mouse_button,mouse_enabled_movement
+
+    drop_menu.text=drop_down_text.format(current_focus)
+
+    mouse_button.text=mouse_text.format(mouse_enabled_movement)
+    if mouse_enabled_movement:
+        mouse_button.color=color.green
+    else:
+        mouse_button.color=color.red
+
     cur_year_txt.text = year_text.format(year,camera.z) 
 
     delay_counter+=time.dt
