@@ -5,6 +5,7 @@ import numpy
 from collections import deque
 import xarray as xr
 from ursina.prefabs.dropdown_menu import DropdownMenu, DropdownMenuButton
+import time as Time
 
 spiceypy.furnsh("../Kernels/lsk/naif0012.tls")
 spiceypy.furnsh("../Kernels/spk/de430.bsp")
@@ -182,24 +183,30 @@ drop_menu=DropdownMenu(x=-.60,y=0.45,text=drop_down_text.format(current_focus),
                        scale=(0.3,0.03,0.0))
 
 mouse_enabled_movement=False
-
+last_time_mouse_button_clicked=0
 def mouse_enabled_movement_function():
-    global mouse_enabled_movement,toggle_free
+    global mouse_enabled_movement,toggle_free,last_time_mouse_button_clicked
+    if (Time.time()-last_time_mouse_button_clicked)<2:
+        return 0
     if not mouse_enabled_movement:
         if toggle_free:
             mouse_enabled_movement=True
+            last_time_mouse_button_clicked=Time.time()
     else:
         mouse_enabled_movement=False
-        
+        last_time_mouse_button_clicked=Time.time()
+   
 mouse_text="Mouse control: {}"
-mouse_button=Button(y=0.43,scale=1,text=mouse_text.format(mouse_enabled_movement),text_color=color.black,
-                    color=color.red,highlight_color=color.white, disabled=False)
+mouse_button=Button(parent=window,name='mouse_button',scale=1,text=mouse_text.format(mouse_enabled_movement),text_color=color.black,
+                    color=color.red,highlight_color=color.white, disabled=False,collider='box')
+mouse_button.world_position=(0,8.5,0)
 mouse_button.fit_to_text()
+mouse_button._eternal=True
 mouse_button.on_click=mouse_enabled_movement_function
-mouse_button.visible=True
-#mouse_button.on_mouse_enter= mouse_button.enable
-#mouse_button.on_mouse_exit=mouse_button.disable
-mouse_button.fit_to_text()
+
+mouse_button.on_mouse_enter= mouse_button.enable
+mouse.unhover_everything_not_hit()
+mouse.double_click=False
 
 
 #camera.position=Vec3(0,10,-100)
@@ -347,6 +354,7 @@ def update():
     drop_menu.text=drop_down_text.format(current_focus)
 
     mouse_button.text=mouse_text.format(mouse_enabled_movement)
+    
     if mouse_enabled_movement:
         mouse_button.color=color.green
     else:
@@ -357,8 +365,12 @@ def update():
     delay_counter+=time.dt
 
     #print(camera.world_position)
-
     
+    if mouse.collision!=None:
+        if mouse.collision.entity=='mouse_button':
+            mouse_button._enabled=True
+    else:
+        mouse_button._enabled=False    
     cur_utc=str(dates[i])
     cur_utc=cur_utc.replace(" ",'T')
     if delay_counter>=1:
