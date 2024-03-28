@@ -140,7 +140,8 @@ default_zoom=-20
 camera.z=default_zoom
 camera.collider=BoxCollider(camera,center=Vec3(0,0,5),size=(5,5,20))
 camera.collider.visible=False
-camera.clip_plane_far_setter(300000)            
+max_far_zoom=300000
+camera.clip_plane_far_setter(max_far_zoom*2)            
 
 drop_down_text='Focus on: {}'
 
@@ -336,7 +337,10 @@ delay_counter=0
                 
 def update():
     
+    global max_far_zoom
     camera_control()
+    if abs(camera.z)>max_far_zoom:
+        camera.z=-max_far_zoom
 
     global follow_earth,zoom_on,delay_counter
     global last_time,cur_year_txt,year_text,curve_renderer,start_date,end_date,i,year,dates
@@ -350,6 +354,10 @@ def update():
     global uranus_text,neptune_text,pluto_text
 
     global planets_info,drop_menu,mouse_button,mouse_enabled_movement
+
+
+
+
 
     drop_menu.text=drop_down_text.format(current_focus)
 
