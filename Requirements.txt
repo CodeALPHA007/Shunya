@@ -11,3 +11,15 @@ PIL
 collections
 xarray
 cftime
+
+
+KERNELS to be downloaded(bsp)
+1.de430
+2.jup365
+3.sat441
+4.nep097
+5.ura111l
+7.mar097
+8.ceres_1900_2100
+(tls)
+1.naif0012
