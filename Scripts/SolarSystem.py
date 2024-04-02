@@ -17,6 +17,8 @@ spiceypy.furnsh("../Kernels/spk/mar097.bsp")    #change
 #spiceypy.furnsh("../Kernels/spk/codes_300ast_20100725.bsp")    #change
 #spiceypy.furnsh("../Kernels/spk/ceres-2003-2016.bsp")    #change
 spiceypy.furnsh("../Kernels/spk/ceres_1900_2100.bsp")    #change
+spiceypy.furnsh("../Kernels/spk/plu058.bsp")    #change
+
 import pandas as pd
 dates=[]
 start_date = '{}-01-04'         #change
@@ -58,30 +60,31 @@ year_text='<red>YEAR</red>\n<green>{}</green><red>\nZoom</red>\n<green>{}</green
 cur_year_txt = Text(scale=1,position=(-0.85,0.45,0))
 
 
-sun=Entity(name='Sun', model='sphere',scale=km2au(696000),texture=r"..\Assets\8k_sun.png",collider='box')
+sun=Entity(name='Sun', model='sphere',scale=km2au(696340*2),texture=r"..\Assets\8k_sun.png",collider='box')
 sun.position=Vec3(0,0,0)
 
-mercury=Entity(name='Mercury', model='sphere',texture=r"..\Assets\mercury.png", scale = km2au(2439),collider='box')
-venus=Entity(name='Venus', model='sphere', scale = km2au(6052), texture=r"..\Assets\venus_atmosphere.png", collider='box')
-earth=Entity(name='Earth',model='sphere', scale = km2au(6387),texture=r"..\Assets\earth_daymap.png", collider='box')
-moon=Entity(name='Moon', model='sphere', scale = km2au(1738), texture=r"..\Assets\moon.png" ,collider='box')
-mars=Entity(name=' Mars', model='sphere', scale = km2au(3393),collider='box', texture="..\Assets\mars.png")
-phobos=Entity(name=' Phobos', model='sphere', scale = km2au(11.2),collider='box', texture="..\Assets\phobos.png")
-deimos=Entity(name=' Deimos', model='sphere', scale = km2au(6.3),collider='box', texture="..\Assets\deimos.png")
-jupiter=Entity(name='Jupiter',model='sphere', scale = km2au(71398), texture="..\Assets\jupiter.png", collider='box')
-ganymede=Entity( name='Ganymede',model='sphere', scale = km2au(2634.1), texture="..\Assets\ganymede.jpg", collider='box')   #change
-callisto=Entity( name='Callisto',model='sphere', scale = km2au(2410.3), texture="..\Assets\callisto.png", collider='box')   #change
-io=Entity( name='Io',model='sphere', scale = km2au(1821.6), texture="..\Assets\io.png", collider='box')                     #change
-europa=Entity( name='Europa',model='sphere', scale = km2au(1560.8), texture="..\Assets\europa.png", collider='box')         #change
-saturn=Entity(name='Saturn', model='sphere', scale = km2au(60000), texture="..\Assets\saturn.png", collider='box')
-titan=Entity( name='Titan',model='sphere', scale = km2au(2574.8), texture="..\Assets\\titan.png", collider='box')           #change
-rhea=Entity( name='Rhea',model='sphere', scale = km2au(763.8), texture="..\Assets\\rhea.png", collider='box')               #change
-uranus=Entity(name='Uranus', model='sphere', scale = km2au(25559), texture=r"..\Assets\uranus.png", collider='box')
-titania=Entity( name='Titania',model='sphere', scale = km2au(789), texture="..\Assets\\titania.png", collider='box')        #change
-neptune=Entity(name='Neptune', model='sphere', scale = km2au(24800), texture=r"..\Assets\neptune.png", collider='box')
-triton=Entity(name='Triton', model='sphere', scale = km2au(1355), texture=r"..\Assets\triton.png", collider='box')          #change
-pluto=Entity(name='Pluto', model='sphere', scale = km2au(1140), texture="..\Assets\pluto.png", collider='box')
-ceres=Entity(name='Ceres', model='sphere', scale = km2au(476), texture="..\Assets\ceres_fictional.png", collider='box')     #change
+mercury=Entity(name='Mercury', model='sphere',texture=r"..\Assets\mercury.png", scale = km2au(2439*2),collider='box')
+venus=Entity(name='Venus', model='sphere', scale = km2au(6052*2), texture=r"..\Assets\venus_atmosphere.png", collider='box')
+earth=Entity(name='Earth',model='sphere', scale = km2au(6387*2),texture=r"..\Assets\earth_daymap.png", collider='box')
+moon=Entity(name='Moon', model='sphere', scale = km2au(1738*2), texture=r"..\Assets\moon.png" ,collider='box')
+mars=Entity(name=' Mars', model='sphere', scale = km2au(3393*2),collider='box', texture="..\Assets\mars.png")
+phobos=Entity(name=' Phobos', model='sphere', scale = km2au(11.2*2),collider='box', texture="..\Assets\phobos.png")
+deimos=Entity(name=' Deimos', model='sphere', scale = km2au(6.3*2),collider='box', texture="..\Assets\deimos.png")
+jupiter=Entity(name='Jupiter',model='sphere', scale = km2au(69911*2), texture="..\Assets\jupiter.png", collider='box')
+ganymede=Entity( name='Ganymede',model='sphere', scale = km2au(2634.1*2), texture="..\Assets\ganymede.jpg", collider='box')   #change
+callisto=Entity( name='Callisto',model='sphere', scale = km2au(2410.3*2), texture="..\Assets\callisto.png", collider='box')   #change
+io=Entity( name='Io',model='sphere', scale = km2au(1821.6*2), texture="..\Assets\io.png", collider='box')                     #change
+europa=Entity( name='Europa',model='sphere', scale = km2au(1560.8*2), texture="..\Assets\europa.png", collider='box')         #change
+saturn=Entity(name='Saturn', model='sphere', scale = km2au(60268*2), texture="..\Assets\saturn.png", collider='box')
+titan=Entity( name='Titan',model='sphere', scale = km2au(2574.8*2), texture="..\Assets\\titan.png", collider='box')           #change
+rhea=Entity( name='Rhea',model='sphere', scale = km2au(763.8*2), texture="..\Assets\\rhea.png", collider='box')               #change
+uranus=Entity(name='Uranus', model='sphere', scale = km2au(25559*2), texture=r"..\Assets\uranus.png", collider='box')
+titania=Entity( name='Titania',model='sphere', scale = km2au(789*2), texture="..\Assets\\titania.png", collider='box')        #change
+neptune=Entity(name='Neptune', model='sphere', scale = km2au(24764*2), texture=r"..\Assets\neptune.png", collider='box')
+triton=Entity(name='Triton', model='sphere', scale = km2au(1355*2), texture=r"..\Assets\triton.png", collider='box')          #change
+pluto=Entity(name='Pluto', model='sphere', scale = km2au(1140*2), texture="..\Assets\pluto.png", collider='box')
+charon=Entity(name='Charon', model='sphere', scale = km2au(606*2), texture="..\Assets\charon.png", collider='box')            #change
+ceres=Entity(name='Ceres', model='sphere', scale = km2au(476*2), texture="..\Assets\ceres_fictional.png", collider='box')     #change
 
 
 sun_text=Text(parent=sun,text='Sun', scale=camera.z*0.4)
@@ -105,6 +108,7 @@ titania_text=Text(parent=titania , text='Titania', scale=camera.z*0.4)      #cha
 neptune_text=Text(parent=neptune , text='Neptune', scale=camera.z*0.4)
 triton_text=Text(parent=triton , text='Triton', scale=camera.z*0.4)         #change
 pluto_text=Text(parent=pluto , text='Pluto', scale=camera.z*0.4)
+charon_text=Text(parent=charon , text='Charon', scale=camera.z*0.4)         #change
 ceres_text=Text(parent=ceres , text='Ceres', scale=camera.z*0.4)            #change
 
 
@@ -128,6 +132,7 @@ trail_titania=deque([],maxlen=100)  #change
 trail_neptune=deque([],maxlen=100)
 trail_triton=deque([],maxlen=100)   #change
 trail_pluto=deque([],maxlen=100)
+trail_charon=deque([],maxlen=100)
 trail_ceres=deque([],maxlen=100)    #change
 
 
@@ -151,6 +156,7 @@ curve_renderer_titania=Entity()     #change
 curve_renderer_neptune=Entity()
 curve_renderer_triton=Entity()      #change
 curve_renderer_pluto=Entity()
+curve_renderer_charon=Entity()      #change
 curve_renderer_ceres=Entity()       #change
 
 
@@ -183,6 +189,7 @@ planets_info={"sun":{'entity':sun,'planet_id': 10, 'text_tag_entity':sun_text ,'
               "neptune":{'entity':neptune,'planet_id': 8, 'text_tag_entity':neptune_text ,'follow': False },
               "triton":{'entity':triton,'planet_id': 801, 'text_tag_entity':triton_text ,'follow': False },         #change
               "pluto":{'entity':pluto,'planet_id': 9, 'text_tag_entity':pluto_text ,'follow': False },
+              "charon":{'entity':charon,'planet_id': 901, 'text_tag_entity':charon_text ,'follow': False },         #change
               "ceres":{'entity':ceres,'planet_id': 2000001, 'text_tag_entity':ceres_text ,'follow': False }         #change
               }
 def set_all_follow_false():
@@ -246,9 +253,11 @@ button_list=[DropdownMenuButton('Free rotation',on_click=Func(set_follow,'free')
                                                 DropdownMenuButton('Titania',on_click=Func(set_follow,'titania')),],    #change
                                                 color=color.white,text_color=color.red,highlight_color=color.yellow),
              DropdownMenu(text='Neptune and Triton',buttons=[DropdownMenuButton('Neptune',on_click=Func(set_follow,'neptune')),
-                                                DropdownMenuButton('Triton',on_click=Func(set_follow,'triton')),],      #change
+                                                DropdownMenuButton('Triton',on_click=Func(set_follow,'triton'))],      #change
                                                 color=color.white,text_color=color.red,highlight_color=color.yellow),
-             DropdownMenuButton('Pluto',on_click=Func(set_follow,'pluto')),
+             DropdownMenu(text='Pluto and Charon',buttons=[DropdownMenuButton('Pluto',on_click=Func(set_follow,'pluto')),
+                                                DropdownMenuButton('Charon',on_click=Func(set_follow,'charon'))],      #change
+                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
              DropdownMenuButton('Ceres',on_click=Func(set_follow,'ceres'))                          #change
              ]
 
@@ -350,7 +359,7 @@ def input(key):
         if toggle_trail==True:
             global curve_renderer_mercury,curve_renderer_venus,curve_renderer_earth,curve_renderer_moon,curve_renderer_deimos,curve_renderer_ceres
             global curve_renderer_mars,curve_renderer_jupiter,curve_renderer_ganymede,curve_renderer_callisto,curve_renderer_saturn #change
-            global curve_renderer_uranus,curve_renderer_neptune,curve_renderer_pluto,curve_renderer_io,curve_renderer_europa        #change
+            global curve_renderer_uranus,curve_renderer_neptune,curve_renderer_pluto,curve_renderer_io,curve_renderer_europa ,curve_renderer_charon      #change
             global curve_renderer_titan,curve_renderer_rhea,curve_renderer_titania,curve_renderer_triton,curve_renderer_phobos      #change
             try:
                 destroy(curve_renderer_mercury)
@@ -373,6 +382,7 @@ def input(key):
                 destroy(curve_renderer_neptune)
                 destroy(curve_renderer_triton)      #change
                 destroy(curve_renderer_pluto)
+                destroy(curve_renderer_charon)      #change
                 destroy(curve_renderer_ceres)       #change
             except:
                 pass    
@@ -432,11 +442,11 @@ def update():
     global last_time,cur_year_txt,year_text,curve_renderer,start_date,end_date,i,year,dates,trail_titan,trail_triton,trail_titania,trail_rhea   #change
     global trail_mercury,trail_venus,trail_earth,trail_moon,trail_mars,trail_jupiter,trail_saturn,trail_uranus,trail_neptune,trail_europa       #change
     global curve_renderer_mercury,curve_renderer_venus,curve_renderer_earth,curve_renderer_moon,trail_ganymede,trail_callisto,trail_io          #change
-    global curve_renderer_mars,curve_renderer_jupiter,curve_renderer_ganymede,curve_renderer_callisto,curve_renderer_saturn                     #change
+    global curve_renderer_mars,curve_renderer_jupiter,curve_renderer_ganymede,curve_renderer_callisto,curve_renderer_saturn,curve_renderer_charon                     #change
     global curve_renderer_uranus,curve_renderer_neptune,curve_renderer_pluto,curve_renderer_io,curve_renderer_europa,curve_renderer_ceres       #change
     global curve_renderer_titan,curve_renderer_rhea,curve_renderer_titania,curve_renderer_triton,curve_renderer_phobos,curve_renderer_deimos    #change
 
-    global sun_text,mercury_text,venus_text,earth_text,moon_text,rhea_text,deimos_text      #change
+    global sun_text,mercury_text,venus_text,earth_text,moon_text,rhea_text,deimos_text,charon_text      #change
     global mars_text,jupiter_text,ganymede_text,saturn_text,callisto_text,triton_text,ceres_text       #change
     global uranus_text,neptune_text,pluto_text,io_text,europa_text,titan_text,phobos_text   #change
 
@@ -470,7 +480,7 @@ def update():
         delay_counter=0
     if i==len(dates):
         year+=1
-        if year>=2100:  #change
+        if year>=2099:  #change
             year=1900     #change
         gen_dates(start_date.format(year),end_date.format(year))
         i=0
@@ -499,7 +509,6 @@ def update():
     earth.position=gen_pos(399,cur_et,10)           #change
     earth_text.world_position=earth.position
     earth_text.world_scale=abs(camera.z)*0.40
-   
     
     focus('moon',cur_et)   
     moon.position=gen_pos(301,cur_et,10)            #change
@@ -585,6 +594,11 @@ def update():
     pluto.position=gen_pos(9,cur_et,10)             #change
     pluto_text.world_position=pluto.position
     pluto_text.world_scale=abs(camera.z)*0.30
+        #add_func
+    focus('charon',cur_et)   
+    charon.position= gen_pos(901,cur_et,9) + gen_pos(9,cur_et,10)
+    charon_text.world_position=charon.position
+    charon_text.world_scale=abs(camera.z)*0.125
         #add
     focus('ceres',cur_et)   
     ceres.position=gen_pos(2000001,cur_et,10)             
@@ -613,6 +627,7 @@ def update():
         trail_neptune.append(neptune.position)
         trail_neptune.append(triton.position)       #change
         trail_pluto.append(pluto.position)
+        trail_charon.append(charon.position)        #change
         trail_ceres.append(ceres.position)          #change
         
     
@@ -637,6 +652,7 @@ def update():
         destroy(curve_renderer_neptune)
         destroy(curve_renderer_triton)      #change
         destroy(curve_renderer_pluto)
+        destroy(curve_renderer_charon)      #change
         destroy(curve_renderer_ceres)       #change
         
         try:
@@ -669,6 +685,8 @@ def update():
             curve_renderer_triton= Entity(model=Mesh(vertices=trail_triton, mode=curve_mode,thickness=thick),color=color.pink )         #change
 
             curve_renderer_pluto= Entity(model=Mesh(vertices=trail_pluto, mode=curve_mode,thickness=thick),color=color.white )
+            curve_renderer_charon= Entity(model=Mesh(vertices=trail_charon, mode=curve_mode,thickness=thick),color=color.white )          #change
+
             curve_renderer_ceres= Entity(model=Mesh(vertices=trail_ceres, mode=curve_mode,thickness=thick),color=color.white )          #change
             
         except:
