@@ -325,31 +325,6 @@ settings_menu=DropdownMenu(x=.30,y=0.40,text='settings',
                        scale=(0.3,0.03,0.0))
 
 mouse_enabled_movement=False
-last_time_mouse_button_clicked=0
-def mouse_enabled_movement_function():
-    global mouse_enabled_movement,toggle_free,last_time_mouse_button_clicked
-    if (Time.time()-last_time_mouse_button_clicked)<3:
-        return 0
-    if not mouse_enabled_movement:
-        if toggle_free:
-            mouse_enabled_movement=True
-            last_time_mouse_button_clicked=Time.time()
-    else:
-        mouse_enabled_movement=False
-        last_time_mouse_button_clicked=Time.time()
-   
-
-mouse_text="Mouse control: {}"
-mouse_button=Button(parent=window,name='mouse_button',scale=1,text=mouse_text.format(mouse_enabled_movement),text_color=color.black,
-                    color=color.red,highlight_color=color.white, disabled=False,collider='box')
-mouse_button.world_position=(0,8.5,0)
-mouse_button.fit_to_text()
-mouse_button._eternal=True
-mouse_button.on_click=mouse_enabled_movement_function
-mouse_button.on_mouse_enter= mouse_button.enable
-mouse.unhover_everything_not_hit()
-mouse.double_click=False
-
 
 # slider = Slider(0, 20, default=5, height=Text.size, y=-0.4, x=-0.8, step=1, dynamic= True, on_value_changed=scale_sensitivity, vertical=False, bar_color = color.yellow)
 # slider.label = Text(parent=slider, y=-0.03, text="adjust sensitivity")
@@ -414,6 +389,9 @@ def input(key):
     #elif key=='m':
     #    mouse_enabled_movement=not(mouse_enabled_movement)  
     #
+    elif key == 'm':
+
+        mouse_enabled_movement = not mouse_enabled_movement
     elif key=='t':
         if toggle_trail==True:
             global curve_renderer_mercury,curve_renderer_venus,curve_renderer_earth,curve_renderer_moon,curve_renderer_deimos,curve_renderer_ceres
@@ -520,12 +498,8 @@ def update():
     
     drop_menu.text=drop_down_text.format(current_focus)
     
-    mouse_button.text=mouse_text.format(mouse_enabled_movement)
+    #mouse_button.text=mouse_text.format(mouse_enabled_movement)
     
-    if mouse_enabled_movement:
-        mouse_button.color=color.green
-    else:
-        mouse_button.color=color.red
 
     cur_year_txt.text = year_text.format(year,camera.z) 
 
@@ -533,11 +507,11 @@ def update():
 
     #print(camera.world_position)
     
-    if mouse.collision!=None:
-        if mouse.collision.entity=='mouse_button':
-            mouse_button._enabled=True
-    else:
-        mouse_button._enabled=False    
+    # if mouse.collision!=None:
+    #     if mouse.collision.entity=='mouse_button':
+    #         mouse_button._enabled=True
+    # else:
+    #     mouse_button._enabled=False    
     cur_utc=str(dates[i])
     cur_utc=cur_utc.replace(" ",'T')
     if delay_counter>=1000:
