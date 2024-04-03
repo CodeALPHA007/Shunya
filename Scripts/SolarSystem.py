@@ -320,7 +320,7 @@ def pause_handler_input(key):
 
 pause_handler.input = pause_handler_input # Assign the input function to the pause handler.
 
-settings_menu=DropdownMenu(x=-.60,y=0.40,text='drop', 
+settings_menu=DropdownMenu(x=.30,y=0.40,text='settings', 
                        buttons=[DropdownMenuButton('Settings',on_click=Func(wp.enable))],color=color.white,text_color=color.red,highlight_color=color.green,
                        scale=(0.3,0.03,0.0))
 
