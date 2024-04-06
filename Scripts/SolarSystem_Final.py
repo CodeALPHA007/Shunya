@@ -310,13 +310,21 @@ class SolarSystem():
         camera.position +=camera.right * 100 * held_keys['d'] * time.dt
         camera.position +=camera.up * 100 * held_keys['z'] * time.dt
         camera.position +=camera.down * 100 * held_keys['x'] * time.dt
-        
+        '''
         camera.rotation_x-=10 *held_keys['up arrow'] * time.dt
         camera.rotation_x+=10 *held_keys['down arrow'] * time.dt
         camera.rotation_y-=10 *held_keys['left arrow'] * time.dt
         camera.rotation_y+=10 *held_keys['right arrow'] * time.dt
         camera.rotation_z+=10 *held_keys['c'] * time.dt
         camera.rotation_z-=10 *held_keys['v'] * time.dt
+        '''
+        camera.rotate(Vec3(10 *held_keys['down arrow'] * time.dt ,
+                              10 *held_keys['right arrow'] * time.dt ,
+                              10 *held_keys['c'] * time.dt))
+
+        camera.rotate(Vec3(-10 *held_keys['up arrow'] * time.dt ,
+                              -10 *held_keys['left arrow'] * time.dt ,
+                              -10 *held_keys['v'] * time.dt))
 
 
         if self._mouse_enabled_movement and self._toggle_free:
