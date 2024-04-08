@@ -80,8 +80,9 @@ class SolarSystem():
         self._curve_mode='line'
         
         self._info = Entity(visible=False)    
-        self._info_text="<white>Name: </white>{}\n<white>Planet ID: </white>{}\n<white>Radius: </white>{} km\n<white>Axial Rotation: </white>{} degree/sec\n<white>Tilt: </white>{} degrees"
+        self._info_text="<red>INFO BOARD</red>\n<white>NAME: </white><green>{}</green>\n<white>PLANET ID: </white><green>{}</green>\n<white>RADIUS: </white><green>{} km</green>\n<white>AXIAL ROTATION: </white><green>{}⁰/sec</green>\n<white>TILT: </white><green>{}⁰</green>"
         
+        self._temp_position=Vec2(0,0)
 
     
     def __km2au(self,val_km: float):
@@ -216,6 +217,7 @@ class SolarSystem():
             camera.z=self._default_zoom
             self._master_planet_dict[planet_name]['follow']=False
             camera._always_on_top=True
+            self._info.enable()
             self._info._visible=True
             self._info.text=self._info_text.format( planet_name, 
                                                     self._master_planet_dict[planet_name]['planet_id'],
@@ -293,7 +295,8 @@ class SolarSystem():
         #Pause menu: Assign the input function to the pause handler.
         self._pause_handler.input = self.__pause_handler_input 
 
-        self._info = Text(scale =1, y = -0.3, x=-0.8)
+        self._info = Text(scale =1, y = 0.0, x=-0.85, wordwrap=30, color=color.tint(color.white,0.9))
+        self._info.current_color=color.red
         self._info._visible=False
         
     def __camera_control(self):      
@@ -310,14 +313,7 @@ class SolarSystem():
         camera.position +=camera.right * 100 * held_keys['d'] * time.dt
         camera.position +=camera.up * 100 * held_keys['z'] * time.dt
         camera.position +=camera.down * 100 * held_keys['x'] * time.dt
-        '''
-        camera.rotation_x-=10 *held_keys['up arrow'] * time.dt
-        camera.rotation_x+=10 *held_keys['down arrow'] * time.dt
-        camera.rotation_y-=10 *held_keys['left arrow'] * time.dt
-        camera.rotation_y+=10 *held_keys['right arrow'] * time.dt
-        camera.rotation_z+=10 *held_keys['c'] * time.dt
-        camera.rotation_z-=10 *held_keys['v'] * time.dt
-        '''
+        
         camera.rotate(Vec3(10 *held_keys['down arrow'] * time.dt ,
                               10 *held_keys['right arrow'] * time.dt ,
                               10 *held_keys['c'] * time.dt))
@@ -362,7 +358,16 @@ class SolarSystem():
                         destroy(self._master_planet_dict[planet]['curve_renderer'])
                 except:
                     pass    
-            self._toggle_trail = not self._toggle_trail  
+            self._toggle_trail = not self._toggle_trail 
+
+        elif key in ['f','F']:
+            if window.size!=window.fullscreen_size:
+                self._temp_position=window.position
+                window.size=window.fullscreen_size
+                window.position=Vec2(0,0)
+            else:
+                window.position=self._temp_position
+                window.size=Vec2(1090,582)
 
     def custom_update(self):
         self.__camera_control()
@@ -380,6 +385,11 @@ class SolarSystem():
         self._drop_menu.text=self._drop_down_text.format(self._current_focus)
         
         self._cur_year_txt.text = self._year_text.format(self._year,camera.z) 
+
+        if self._toggle_free:
+            self._info.disable()
+            self._info._visible=False
+            
 
         self._delay_counter+=time.dt
         
@@ -399,7 +409,7 @@ class SolarSystem():
         
 
         for planet in self._master_planet_dict.keys():
-            #self._master_planet_dict[planet]['entity']
+            
             self.__focus(planet,temp_cur_et)
             if planet!='sun':
                 temp_obs_planet_id=self._master_planet_dict[planet]['obs_planet_id']
