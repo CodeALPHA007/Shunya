@@ -313,7 +313,7 @@ class SolarSystem():
         self._wp = WindowPanel(
                         title='Pause Menu',
                         content=(
-                                Text('adjust sensitivity'),
+                                Text('Adjust Sensitivity'),
                                 temp_slider := Slider(0, 20, default=5,
                                                     height=Text.size, 
                                                     y=-0.4, x=-0.8, 
@@ -321,7 +321,7 @@ class SolarSystem():
                                                     on_value_changed=self.__scale_sensitivity, 
                                                     vertical=False,
                                                     bar_color = color.yellow),
-                                temp_y_t:= Text('Select Year [range {} to {}]'.format(self._start_year,self._end_year)),
+                                temp_y_t:= Text('Set Year [range {} to {}]'.format(self._start_year,self._end_year)),
                                 temp_year_field := InputField( limit_content_to='0123456789', active=False),                 
                                 temp_day_selector:= ButtonGroup(['Day'],max_selection=1,min_selection=0)                  
                                 ),
@@ -371,6 +371,11 @@ class SolarSystem():
         self._wp._always_on_top=True
         self._wp.bg.on_click=None
         self._wp.panel.world_scale=Vec3(20,15,0)
+        try:
+            self._wp.panel.texture=r'..\Assets\flipped_vertical_gradient'
+        except:
+            self._wp.panel.texture='vertical_gradient'
+        self._wp.panel.color=color.hsv(200,0.6,0.1,1)
 
         #destroy(self._slider)
         
@@ -430,10 +435,10 @@ class SolarSystem():
             self._mouse_drag=False
             self._mouse_drag_initial=None
         
-        elif key == 'm':
+        elif key in ['m','M']:
             self._mouse_enabled_movement = not self._mouse_enabled_movement
         
-        elif key=='t':
+        elif key in ['t','T']:
             if self._toggle_trail:
                 try:
                     for planet in self._master_planet_dict.keys():
