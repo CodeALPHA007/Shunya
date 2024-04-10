@@ -1,0 +1,27 @@
+T/t - toggle trail 
+
+camera movement:
+w,a,s,d,z,x
+w, s - camera zoom in and out
+a, d - camera Left and Right
+z, x - camera moving linearly up and down
+
+Camera rotation:
+Up arrow, down arrow, left arrow, right arrow, c, v
+Up arrow - camera looking up
+Down arrow - camera looking down
+Left arrow - camera looking left
+Right arrow - camera looking right 
+c, v -camera rotating about z-axis
+
+Scroll up- zoom in
+Scroll down- zoom out
+Left mouse - drag
+
+M/m - enabling mouse following movement (only in free rotation)
+
+F/f - toggle full screen
+
+Backspace - Clear trail
+
+Escape - Pause Menu
