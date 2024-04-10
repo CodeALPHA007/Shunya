@@ -7,6 +7,7 @@ import xarray as xr
 from ursina.prefabs.dropdown_menu import DropdownMenu, DropdownMenuButton
 import time as Time
 import pandas as pd
+import calendar
 
 class SolarSystem():
     def __init__(self):
@@ -20,8 +21,10 @@ class SolarSystem():
     def __set_date_year(self):    
         self._start_date = '{}-01-04'
         self._end_date = '{}-12-31' 
-        self._start_year=1900
-        self._end_year=2099
+        self._start_year=1901
+        self._end_year=2098
+        self._month=''
+        self._day=''
 
     def __set_kernels(self):  
         spiceypy.furnsh("../Kernels/lsk/naif0012.tls")
@@ -40,7 +43,7 @@ class SolarSystem():
         self._toggle_trail=False
         self._multiplier=1000
         self._cur_year_dict_index=0
-        self._year_text='<red>YEAR</red>\n<green>{}</green><red>\nZoom</red>\n<green>{}</green>'
+        self._year_text='<red>CURRENT TIME</red>\n<green>{}-{}-{}</green><red>\nZoom</red>\n<green>{}</green>'
         self._cur_year_txt = Text(scale=1,position=(-0.85,0.45,0))
         self._sensi=0.005
         self._current_focus='sun'
@@ -66,7 +69,7 @@ class SolarSystem():
 
         self._mouse_enabled_movement=False
 
-        self._pause_handler = Entity(ignore_paused=True)
+       
 
         self._mouse_drag=False
         self._mouse_drag_initial=None
@@ -84,6 +87,10 @@ class SolarSystem():
         
         self._temp_position=Vec2(0,0)
 
+        self._pause_menu_enabled=False
+
+        self._month_drop=Entity(visible=False)
+        
     
     def __km2au(self,val_km: float):
         return (spiceypy.convrt(val_km,'km','au'))*self._multiplier
@@ -192,11 +199,7 @@ class SolarSystem():
     def __scale_sensitivity(self):
         self._sensi = self._slider.value/1000
 
-    def __pause_handler_input(self,key):
-        if key == 'escape':
-
-            application.paused = not application.paused # Pause/unpause the game.
-            self._wp.enabled = not self._wp.enabled
+   
 
     def __focus(self,planet_name: str, cur_et):
         if planet_name==None:
@@ -267,38 +270,117 @@ class SolarSystem():
 
         destroy(self._drop_menu)
         self._drop_menu=DropdownMenu(x=-.60,y=0.45,text=self._drop_down_text.format(self._current_focus), 
-                       buttons=button_list,color=color.white,text_color=color.red,highlight_color=color.green,
-                       scale=(0.3,0.03,0.0))
+                    buttons=button_list,color=color.white,text_color=color.red,highlight_color=color.green,
+                    scale=(0.3,0.03,0.0))
 
+    
         #Pause menu
+        
+        def __cal(x: int):
+                     
+            temp=str(x)
+            if int(temp)%10==int(temp):
+                temp="0{}".format(int(temp))
+            self._month=temp
+            self._month_drop.text='Month: '+self._month
+        
+            temp_days=calendar.month(self._year,x).split()[9:]
+            self._day_selector.enable()
+            self._day_selector.options=temp_days
+            self._day_selector.max_selection=1
+            def on_value_changed():
+                temp=str(self._day_selector.value)
+                if int(temp)%10==int(temp):
+                    temp="0{}".format(int(temp))
+                self._day=temp
+            self._day_selector.on_value_changed = on_value_changed
+
+
+        month_button_list=[
+                            DropdownMenuButton('January',on_click=Func(__cal,1), ignore_paused=True),
+                            DropdownMenuButton('February',on_click=Func(__cal,2), ignore_paused=True),
+                            DropdownMenuButton('March',on_click=Func(__cal,3), ignore_paused=True),
+                            DropdownMenuButton('April',on_click=Func(__cal,4), ignore_paused=True),
+                            DropdownMenuButton('May',on_click=Func(__cal,5), ignore_paused=True),
+                            DropdownMenuButton('June',on_click=Func(__cal,6), ignore_paused=True),
+                            DropdownMenuButton('July',on_click=Func(__cal,7), ignore_paused=True),
+                            DropdownMenuButton('August',on_click=Func(__cal,8), ignore_paused=True),
+                            DropdownMenuButton('September',on_click=Func(__cal,9), ignore_paused=True),
+                            DropdownMenuButton('October',on_click=Func(__cal,10), ignore_paused=True),
+                            DropdownMenuButton('November',on_click=Func(__cal,11), ignore_paused=True),
+                            DropdownMenuButton('December',on_click=Func(__cal,12), ignore_paused=True)
+                          ]
         self._wp = WindowPanel(
                         title='Pause Menu',
                         content=(
                                 Text('adjust sensitivity'),
                                 temp_slider := Slider(0, 20, default=5,
-                                                       height=Text.size, 
-                                                       y=-0.4, x=-0.8, 
-                                                       step=1, dynamic= True, 
-                                                       on_value_changed=self.__scale_sensitivity, 
-                                                       vertical=False,
-                                                       bar_color = color.yellow)
+                                                    height=Text.size, 
+                                                    y=-0.4, x=-0.8, 
+                                                    step=1, dynamic= True, 
+                                                    on_value_changed=self.__scale_sensitivity, 
+                                                    vertical=False,
+                                                    bar_color = color.yellow),
+                                temp_y_t:= Text('Select Year [range {} to {}]'.format(self._start_year,self._end_year)),
+                                temp_year_field := InputField( limit_content_to='0123456789', active=False),                 
+                                temp_day_selector:= ButtonGroup(['Day'],max_selection=1,min_selection=0)                  
                                 ),
                         popup=True
                         )
         self._slider=temp_slider
-        self._wp.enabled = False
         self._slider.knob.ignore_paused= True
         self._slider.ignore_paused=True
+        
+        self._year_selector=temp_year_field
+        self._year_selector.world_position=temp_y_t.world_position+Vec3(4.5,-1.5,0)
+        #self._year_selector.text='{} <= Input Year <= {} '.format(self._start_year,self._end_year)
+        temp_day_selector.disable()
+
+        if self._year>=self._start_year and self._year<=self._end_year:
+            self._month_drop=DropdownMenu()
+            #self._day_drop=DropdownMenu()
+            
+
+            self._day_selector=temp_day_selector
+            self._day_selector.disable()
+            
+            self._month_drop.parent=self._wp
+            self._month_drop.world_position=self._year_selector.world_position+Vec3(-7,-1,0)
+            self._month_drop.scale=0.5
+            self._month_drop.text='Month'
+            height=self._month_drop.down*2
+            for i in month_button_list:
+                i.parent=self._month_drop
+                i.scale=1
+                #i.position=self._month_drop.position+Vec3(0,-height,0)
+                i.position=height
+                height+=i.down*2
+            self._month_drop.buttons=month_button_list
+            self._month_drop.disable()
+            #self._day_drop.parent=self._wp
+            #self._day_drop.world_position=self._slider.world_position+Vec3(5,-1,0)
+            #self._day_drop.scale=0.5
+            #self._day_drop.text='Day'
+            
+            
+
+
+        #self._wp.y = self._wp.panel.scale_y / 2 * self._wp.scale_y
+        self._wp.y=0.45
+        self._wp.disable()
+        self._wp._always_on_top=True
+        self._wp.bg.on_click=None
+        self._wp.panel.world_scale=Vec3(20,15,0)
+
         #destroy(self._slider)
         
 
-        #Pause menu: Assign the input function to the pause handler.
-        self._pause_handler.input = self.__pause_handler_input 
+        
 
         self._info = Text(scale =1, y = 0.0, x=-0.85, wordwrap=30, color=color.tint(color.white,0.9))
         self._info.current_color=color.red
         self._info._visible=False
-        
+    
     def __camera_control(self):      
         if self._mouse_drag and self._mouse_drag_initial!=None:
             camera.x-=abs(camera.z) * (mouse.x - self._mouse_drag_initial[0]) * time.dt
@@ -369,11 +451,72 @@ class SolarSystem():
                 window.position=self._temp_position
                 window.size=Vec2(1090,582)
 
+        elif key == 'backspace':
+            for planet in self._master_planet_dict.keys():
+                if planet=='sun':
+                    continue
+                try:
+                    destroy(self._master_planet_dict[planet]['curve_renderer'])
+                except:
+                    pass
+                self._master_planet_dict[planet]['trail_deque'].clear()     
+        
+        elif key=='escape':
+            self._pause_menu_enabled= not self._pause_menu_enabled
+            if self._pause_menu_enabled:
+                self._drop_menu.disable()
+                self._wp.enable()
+            else:
+                self._drop_menu.enable()
+                self._wp.disable()
+                #self.__gen_dates(self._start_date.format(self._year),self._end_date.format(self._year))
+                #self._cur_year_dict_index=0
+                temp_start_date="{}-{}-{}".format(self._year,self._month,self._day)
+
+                self.__gen_dates(temp_start_date,self._end_date.format(self._year))
+                self._cur_year_dict_index=0
+
+
+  
+
+
     def custom_update(self):
+        
+        #print(self._year,' ',self._month,' ',self._day)
+
+        if self._pause_menu_enabled:
+            self._sensi = self._slider.value/1000
+            if self._year_selector.active:
+                if self._year_selector.text!='':
+                    if int(self._year_selector.text) in range(self._start_year,self._end_year+1):
+                        self._year_selector.text_color=color.green
+                        self._month_drop.enable()
+                    else:
+                        self._year_selector.text_color=color.red
+                        self._month_drop.disable()
+                        try:
+                            self._day_selector.disable()
+                        except:
+                            pass
+            
+            if not self._year_selector.active:
+                if self._year_selector.text=="":
+                    self._year_selector.text_color=color.red
+                    self._month_drop.disable()
+                    try:
+                        self._day_selector.disable()
+                    except:
+                        pass
+
+                elif self._month_drop.enabled==True:
+                    self._year=int(self._year_selector.text)
+                
+            return
+        
+        
         self.__camera_control()
         if abs(camera.z)>self._max_far_zoom:
             camera.z=-self._max_far_zoom
-        self._sensi = self._slider.value/1000
         
         self._collider_ray = raycast(origin= camera.world_position,
                                      ignore=(camera,),
@@ -384,7 +527,7 @@ class SolarSystem():
         
         self._drop_menu.text=self._drop_down_text.format(self._current_focus)
         
-        self._cur_year_txt.text = self._year_text.format(self._year,camera.z) 
+        self._cur_year_txt.text = self._year_text.format(self._year,self._month,self._day,camera.z) 
 
         if self._toggle_free:
             self._info.disable()
@@ -394,13 +537,19 @@ class SolarSystem():
         self._delay_counter+=time.dt
         
         temp_cur_utc=str(self._dates[self._cur_year_dict_index])
+        #print(temp_cur_utc)
         temp_cur_utc=temp_cur_utc.replace(" ",'T')
+        self._year=int(temp_cur_utc[:4])
+        self._month=temp_cur_utc[5:7]
+        self._day=temp_cur_utc[8:temp_cur_utc.index("T")]
+
+        
         if self._delay_counter>=1:
             self._cur_year_dict_index += 1
             self._delay_counter=0
 
         if self._cur_year_dict_index==len(self._dates):
-            self._year += 1
+            self._year +=1
             if self._year>=self._end_year:  
                 self._year=self._start_year 
             self.__gen_dates(self._start_date.format(self._year),self._end_date.format(self._year))
