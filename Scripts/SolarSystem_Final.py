@@ -582,6 +582,8 @@ class SolarSystem():
                 pass
             
             if self._time_selector_field.active:
+                temp=self._time_selector_field.text.replace(':','')
+                self._time_selector_field.text=temp
                 if len(self._time_selector_field.text) in range (1,7):
                     self._time_selector_field.text_color=color.green
                         
