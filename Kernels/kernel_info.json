@@ -1,0 +1,10 @@
+{
+"naif0012": {"path": "../Kernels/lsk/naif0012.tls", "start_date": 0, "end_date": 99999999}, 
+"de430": {"path": "../Kernels/spk/de430.bsp", "start_date": 15491231, "end_date": 26500125}, 
+"jup365": {"path": "../Kernels/spk/jup365.bsp", "start_date": 16000110, "end_date": 22000110}, 
+"sat441": {"path": "../Kernels/spk/sat441.bsp", "start_date": 17491230, "end_date": 22500106},
+ "nep097": {"path": "../Kernels/spk/nep097.bsp", "start_date": 16000110, "end_date": 23991231}, 
+"ura111l": {"path": "../Kernels/spk/ura111l.bsp", "start_date": 16000110, "end_date": 23991231}, 
+"mar097": {"path": "../Kernels/spk/mar097.bsp", "start_date": 19000104, "end_date": 21000101},
+ "ceres_1900_2100": {"path": "../Kernels/spk/ceres_1900_2100.bsp", "start_date": 19000101, "end_date": 21000101}, "plu058": {"path": "../Kernels/spk/plu058.bsp", "start_date": 19000102, "end_date": 20991228}
+}
