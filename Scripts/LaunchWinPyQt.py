@@ -2,11 +2,13 @@ import subprocess
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import * 
-from PyQt5.QtCore import * 
+from PyQt5.QtCore import *
+from PyQt5 import QtCore
 from pyqt_slideshow import SlideShow
 import sys
 import numpy as np
 import cv2
+import webbrowser
 
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
@@ -20,6 +22,7 @@ class VideoThread(QThread):
         frame_counter = 0
         while self._run_flag:
             ret, cv_img = cap.read()
+            cv_img = cv2.resize(cv_img, (1080, 572), interpolation = cv2.INTER_LINEAR)
             frame_counter += 1
             #If the last frame is reached, reset the capture and the frame_counter
             if frame_counter == (cap.get(cv2.CAP_PROP_FRAME_COUNT)-1):
@@ -62,21 +65,25 @@ class Show_Main(QWidget):
     def button(self, str, s, t):
        pybutton = QPushButton(str, s)
        pybutton.setGeometry(t[0], t[1], t[2], t[3])
-       pybutton.setStyleSheet("color: white;"
-                             "background-color: rgb(0,20,20);"
+       pybutton.setStyleSheet("color: black;"
+                             "background-color: rgb(124,124,150);"
                              "border: 0.5px solid black;"
                              "border-radius: 20px;")
        return pybutton
 
     def new(self, s):
         s.setWindowTitle("Main")
+        s.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMinimizeButtonHint)
         #s.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(20, 34, 195), stop: 1 rgb(0, 100, 25) );")
         #self.setWindowOpacity(1.0)        
-        s.setGeometry(150, 150, 800, 500)
+        s.setGeometry(137, 107, 1090, 582)
 
-        str_system = 'Revolution'
+        str_system = 'Start'
         #s="C:\\Users\\Atreyee\\Desktop\\Python scripts\\Scripts\\Trail.py"
         self.button(str_system, s, ((300, 150, 100, 50))).clicked.connect(self.show_new)
+
+        self.button('About', s, ((220, 250, 100, 50))).clicked.connect(self.show_about)
+        self.button('Website',s, ((390, 250, 100, 50))).clicked.connect(self.show_web)
 
         label = QLabel("Welcome", s)
         label.setStyleSheet("color: white;"
@@ -91,10 +98,21 @@ class Show_Main(QWidget):
         settings_button.clicked.connect(lambda: self.show_on_click(s))
         #settings_button.clicked.connect(s.close)
 
+    def show_web(self):
+        webbrowser.open('https://yashprogrammer.wordpress.com/', new= 2)
+    
+    def show_about(self):
+        dialog = QDialog(self)
+        dialog.resize(650,350)
+        dialog.setStyleSheet("background-color: rgb(124,124,150);")
+        dialog.exec_()
+    
     def show_dia(self):
         d=QDialog()
+        d.resize(550,130)
         label = QLabel("NASA, ESA, and The Hubble Heritage Team (STScI/AURA). Acknowledgment: \nJ. Gallagher (University of Wisconsin), M. Mountain (STScI) and P. Puxley (NSF).", d)
-        d.setGeometry(80,350, 400,100)
+        label.setGeometry(70, 30, 550, 50)
+        d.setStyleSheet("background-color: rgb(124,124,150);")
         d.exec_()
     
     def show_on_click(self, s):
@@ -103,7 +121,7 @@ class Show_Main(QWidget):
         s.close()
 
     def show_new(self):
-        subprocess.Popen(["python", r'.\SolarSyatem_Final.py'])
+        subprocess.Popen(r".\SolarSystem_Final.exe",shell=True)
 
 class MainWindow(QMainWindow):
 
@@ -114,7 +132,7 @@ class MainWindow(QMainWindow):
     def button(self, str,t):
        pybutton = QPushButton(str, self)
        pybutton.setGeometry(t[0], t[1], t[2], t[3])
-       pybutton.setStyleSheet("color: black;"
+       pybutton.setStyleSheet("color: white;"
                              "border: 0.5px solid black;"
                              "border-radius: 20px;")
        return pybutton
@@ -129,13 +147,14 @@ class MainWindow(QMainWindow):
 
     def try_now(self,checked = None):
         self.setWindowTitle("Main")
-        self.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(20, 34, 195), stop: 1 rgb(0, 100, 25) );")
+        self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMinimizeButtonHint)
+        self.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(114, 4, 85), stop: 1 rgb(3, 6, 55) );")
         self.setWindowOpacity(1.0)        
-        self.setGeometry(150, 150, 800, 500)
+        self.setGeometry(137, 107, 1090, 582)
 
         # create the label that holds the image
         self.image_label = QLabel(self)
-        self.image_label.setGeometry(10, 10, 780,475)
+        self.image_label.setGeometry(1, 1, 1100,585)
         # create the video capture thread
         self.thread = VideoThread()
         # connect its signal to the update_image slot
@@ -146,6 +165,9 @@ class MainWindow(QMainWindow):
         str_system = 'Start'
         #s="C:\\Users\\Atreyee\\Desktop\\Python scripts\\Scripts\\Trail.py"
         self.button(str_system, ((300, 150, 100, 50))).clicked.connect(self.show_new)
+
+        self.button('About', ((220, 250, 100, 50))).clicked.connect(self.show_about)
+        self.button('Website', ((390, 250, 100, 50))).clicked.connect(self.show_web)
 
         label = QLabel("Welcome", self)
         label.setStyleSheet("color: white;"
@@ -171,21 +193,30 @@ class MainWindow(QMainWindow):
         """Convert from an opencv image to QPixmap"""
         rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
+        #print(rgb_image.shape)
         bytes_per_line = ch * w
         convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
-        p = convert_to_Qt_format.scaled(900, 900, Qt.KeepAspectRatio)
+        p = convert_to_Qt_format.scaled(1080, 572, Qt.KeepAspectRatio)
         return QPixmap.fromImage(p)
+    
+    def show_web(self):
+        webbrowser.open('https://yashprogrammer.wordpress.com/', new= 2)
+    
+    def show_about(self):
+        dialog = QDialog(self)
+        dialog.resize(650,350)
+        dialog.exec_()
     
     def show_dialog(self):
         dlg = QDialog(self)
-        dlg.move(650,350)
-        self.button_diag(dlg, 'Open color dialog', ((10,50,90,40)), "transparent").clicked.connect(self.on_click)
+        dlg.resize(650,350)
+        self.button_diag(dlg, 'Open color picker', ((10,50,100,40)), "transparent").clicked.connect(self.on_click)
 
-        slider_button= self.button_diag(dlg, 'Open slider', ((10,90,90,40)), "transparent")
+        slider_button= self.button_diag(dlg, 'Open opacity slider', ((10,90,100,40)), "transparent")
         slider_button.clicked.connect(self.slide)
         slider_button.clicked.connect(dlg.close)
 
-        slide_show_button = self.button_diag(dlg, 'Slide Show', ((10,130,90,40)), "transparent")
+        slide_show_button = self.button_diag(dlg, 'Slide Show', ((10,130,100,40)), "transparent")
         slide_show_button.clicked.connect(self.slide_show)
         slide_show_button.clicked.connect(dlg.close)
         slide_show_button.clicked.connect(self.close)
@@ -215,7 +246,7 @@ class MainWindow(QMainWindow):
                 
 
     def show_new(self):
-        subprocess.Popen(["python", r'.\SolarSystem.py'])
+        subprocess.Popen(r".\SolarSystem_Final.exe",shell=True)
 
 app = QApplication(sys.argv)
 w = MainWindow()
