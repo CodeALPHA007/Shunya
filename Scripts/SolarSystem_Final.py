@@ -32,21 +32,41 @@ class SolarSystem():
         self._hour='00'
         self._minute='00'
         self._second='00'
-        self._date_frequency='Daily'
+        self._date_frequency='D'
         self._start_date=cftime.datetime
         self._end_date=cftime.datetime
         self._end_arr=[]
         self._start_arr=[]
 
         
-    def __set_start_end_date(self):
-        self._start_date=cftime.datetime(year=self._year,
-                                                month=int(self._month),
-                                                day=int(self._day),
+    def __set_start_end_date(self,forced=False):
+        if forced:
+            self._start_date=cftime.datetime(year=self._year,
+                                                    month=int(self._month),
+                                                    day=int(self._day),
+                                                    hour=int(self._hour),
+                                                    minute=int(self._minute),
+                                                    second=int(self._second)
+                                            )
+        else:    
+            if self._year!=self._start_year:
+                self._start_date=cftime.datetime(year=self._year,
+                                                month=1,
+                                                day=1,
                                                 hour=int(self._hour),
                                                 minute=int(self._minute),
                                                 second=int(self._second)
-                                         )
+                                            )    
+            else:
+                self._start_date=cftime.datetime(year=self._year,
+                                                month=self._start_arr[1],
+                                                day=self._start_arr[2]+1,
+                                                hour=0,
+                                                minute=0,
+                                                second=0
+                                            )
+
+
         if self._year!=self._end_year:
             self._end_date=cftime.datetime(year=self._year,
                                             month=12,
@@ -160,6 +180,11 @@ class SolarSystem():
         self._pause=False
 
         self._update_frequency=1.0
+
+        self._date_frequency_options_dict={'Hourly':'H',
+                                           'Daily': 'D',
+                                           'Monthly': 'ME'
+                                           }
     
     def __km2au(self,val_km: float):
         return (spiceypy.convrt(val_km,'km','au'))*self._multiplier
@@ -177,10 +202,45 @@ class SolarSystem():
         return Vec3(x,y,z)
 
 
-    def __gen_dates(self):
+    def __gen_dates(self,forced=False):
         self._dates.clear()
-        self.__set_start_end_date()
-        self._dates=list(xr.cftime_range(self._start_date, self._end_date, freq=self._date_frequency[0]))
+        
+        self.__set_start_end_date(forced)
+        _, temp_number_of_days = calendar.monthrange(self._year, int(self._month))
+
+        if self._date_frequency=='ME' and int(self._day)<temp_number_of_days:
+            #print([self._year,self._month,self._day,temp_number_of_days])
+            self._dates.clear()
+            for m in range (int(self._month),13):
+                
+                if self._year==self._end_year and m==self._end_arr[1]:
+                    print("line 216: ",self._day,' ', self._end_arr[2])
+                    if int(self._day)>self._end_arr[2]:
+                        self._day=self._end_arr[2]-1
+                cf_time_object=cftime.datetime(year=self._year,
+                                               month=m,
+                                               day=int(self._day),
+                                               hour=int(self._hour),
+                                               minute=int(self._minute),
+                                               second=int(self._second)
+                                               )
+                self._dates.append(cf_time_object)
+        else:
+            self._dates=list(xr.cftime_range(self._start_date, self._end_date, freq=self._date_frequency))
+            if self._year==self._end_year and len(self._dates) < (self._end_arr[1]-int(self._month)+1):
+                cf_time_object=cftime.datetime(year=self._year,
+                                               month=self._end_arr[1],
+                                               day=self._end_arr[2]-1,
+                                               hour=int(self._hour),
+                                               minute=int(self._minute),
+                                               second=int(self._second)
+                                               )
+                self._dates.append(cf_time_object)
+                
+        
+        #print(self._start_date)
+        #print(self._end_date)
+        #print(self._dates)
         
 
     
@@ -414,7 +474,7 @@ class SolarSystem():
                                 temp_d_f_t:= Text('Set Date Change Frequency'),
                                 temp_date_frequency_button := ButtonGroup(['Hourly', 'Daily', 'Monthly'],
                                                                           max_selection=1,min_selection=1,
-                                                                          default=self._date_frequency,
+                                                                          default='Daily',
                                                                           spacing=(0.1,0,0)
                                                                           ),
                                 temp_u_f_t:= Text('Set Update Frequency: '),
@@ -463,6 +523,14 @@ class SolarSystem():
         temp_d_f_t.position=temp_t_t.position+Vec3(1.125,0,0)
         
         self._date_frequency_button=temp_date_frequency_button
+        def _date_frequency_button_on_value_changed():
+                temp=str(self._date_frequency_button.value)
+                if temp in self._date_frequency_options_dict.keys():
+                    self._date_frequency=self._date_frequency_options_dict[temp]
+                    #self.__gen_dates(forced=True)
+
+        self._date_frequency_button.on_value_changed = _date_frequency_button_on_value_changed
+
         self._date_frequency_button.world_position=temp_d_f_t.world_position+Vec3(-0.5,-1,0) 
 
         temp_u_f_t.position=temp_t_t.position+Vec3(0,-3.5,0) 
@@ -632,7 +700,7 @@ class SolarSystem():
                 self._pause=False
                 self._drop_menu.enable()
                 self._wp.disable()
-                self.__gen_dates()
+                self.__gen_dates(forced=True)
                 self._cur_year_dict_index=0
 
         elif key in ['p','P']:
@@ -690,7 +758,7 @@ class SolarSystem():
                 self._time_selector_field.text=self._hour+':'+self._minute+':'+self._second
                 self._time_selector_field.text_color=color.green
                 
-            self._date_frequency=self._date_frequency_button.value  
+            #self._date_frequency=self._date_frequency_button.value  
             if self._day_selector.value!='Day':
                 self._day=self._day_selector.value
 
@@ -768,8 +836,12 @@ class SolarSystem():
 
             if self._cur_year_dict_index==len(self._dates):
                 self._year +=1
+                self._month='01'
                 if self._year>self._end_year:  
-                    self._year=self._start_year     
+                    self._year=self._start_year
+                    #print([int(self._day),self._end_arr[2]-1])
+                    if self._date_frequency=='ME' and int(self._day)==self._end_arr[2]-1:
+                        self._day='31'     
                 self.__gen_dates()
                 self._cur_year_dict_index=0
             temp_cur_et=spiceypy.utc2et(temp_cur_utc)
