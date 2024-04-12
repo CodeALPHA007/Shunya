@@ -9,6 +9,7 @@ from ursina.prefabs.dropdown_menu import DropdownMenu, DropdownMenuButton
 import time as Time
 import pandas as pd
 import calendar
+import json
 
 class SolarSystem():
     def __init__(self):
@@ -23,8 +24,8 @@ class SolarSystem():
     def __set_date_year(self):    
         #self._start_date = '{}-01-04'
         #self._end_date = '{}-12-31' 
-        self._start_year=1901
-        self._end_year=2098
+        self._start_year=0
+        self._end_year=0
         self._year=self._start_year
         self._month='01'
         self._day='01'
@@ -34,6 +35,8 @@ class SolarSystem():
         self._date_frequency='Daily'
         self._start_date=cftime.datetime
         self._end_date=cftime.datetime
+        self._end_arr=[]
+        self._start_arr=[]
 
         
     def __set_start_end_date(self):
@@ -44,16 +47,25 @@ class SolarSystem():
                                                 minute=int(self._minute),
                                                 second=int(self._second)
                                          )
-        self._end_date=cftime.datetime(year=self._year,
-                                        month=12,
-                                        day=31,
-                                        hour=int(self._hour),
-                                        minute=int(self._minute),
-                                        second=int(self._second)
-                                    )
-    
+        if self._year!=self._end_year:
+            self._end_date=cftime.datetime(year=self._year,
+                                            month=12,
+                                            day=31,
+                                            hour=int(self._hour),
+                                            minute=int(self._minute),
+                                            second=int(self._second)
+                                        )
+        else:
+            self._end_date=cftime.datetime(year=self._year,
+                                            month=self._end_arr[1],
+                                            day=self._end_arr[2]-1,
+                                            hour=0,
+                                            minute=0,
+                                            second=0
+                                        )
+
     def __set_kernels(self):  
-        spiceypy.furnsh("../Kernels/lsk/naif0012.tls")
+        """ spiceypy.furnsh("../Kernels/lsk/naif0012.tls")
         spiceypy.furnsh("../Kernels/spk/de430.bsp")
         spiceypy.furnsh("../Kernels/spk/jup365.bsp")    #change
         spiceypy.furnsh("../Kernels/spk/sat441.bsp")    #change
@@ -64,7 +76,35 @@ class SolarSystem():
         #spiceypy.furnsh("../Kernels/spk/ceres-2003-2016.bsp")    #change
         spiceypy.furnsh("../Kernels/spk/ceres_1900_2100.bsp")    #change
         spiceypy.furnsh("../Kernels/spk/plu058.bsp")    #change
-    
+        """
+        with open("../Kernels/kernel_info.json",'r') as json_file:
+            kernel_info=json.load(json_file)
+        #print(kernel_info)    
+        temp_start_dt_arr=[]
+        temp_end_dt_arr=[]
+        for kernel in kernel_info.keys():
+            spiceypy.furnsh(kernel_info[kernel]['path'])
+            temp_start_dt_arr.append(kernel_info[kernel]['start_date'])
+            temp_end_dt_arr.append(kernel_info[kernel]['end_date'])
+        temp_start=str(max(temp_start_dt_arr))
+        temp_end=str(min(temp_end_dt_arr)) 
+        self._start_year=int(temp_start[:4])
+        self._year=self._start_year
+        self._month=temp_start[4:6]
+        self._day=temp_start[6:] 
+        self._start_arr=[int(temp_start[:4]),
+                       int(temp_start[4:6]),
+                       int(temp_start[6:])
+                       ]
+        
+        self._end_arr=[int(temp_end[:4]),
+                       int(temp_end[4:6]),
+                       int(temp_end[6:])
+                       ]
+        self._end_year=self._end_arr[0]
+            
+            
+
     def __set_constants(self):
         self._toggle_trail=False
         self._multiplier=1000
@@ -318,29 +358,42 @@ class SolarSystem():
             self._month_drop.text='Month: '+self._month
         
             temp_days=calendar.month(self._year,x).split()[9:]
-            self._day_selector.enable()
+            temp_input_year=int(self._year_selector.text)
+            
+            if temp_input_year==self._end_year:
+                if int(self._month)==self._end_arr[1]:
+                    temp_days=temp_days[:self._end_arr[2]-1]
+            
+            elif temp_input_year==self._start_year:
+                if int(self._month)==self._start_arr[1]:
+                    temp_days=temp_days[self._start_arr[2]-1:]
+            
+            
             self._day_selector.options=temp_days
+            self._day_selector.default_values=(self._day,)
+            self._day_selector.enable()
+        
             def on_value_changed():
                 temp=str(self._day_selector.value)
                 if int(temp)%10==int(temp):
                     temp="0{}".format(int(temp))
-                self._day=temp
+                    self._year_selector.active=False
             self._day_selector.on_value_changed = on_value_changed
 
 
-        month_button_list=[
-                            DropdownMenuButton('January',on_click=Func(__cal,1), ignore_paused=True),
-                            DropdownMenuButton('February',on_click=Func(__cal,2), ignore_paused=True),
-                            DropdownMenuButton('March',on_click=Func(__cal,3), ignore_paused=True),
-                            DropdownMenuButton('April',on_click=Func(__cal,4), ignore_paused=True),
-                            DropdownMenuButton('May',on_click=Func(__cal,5), ignore_paused=True),
-                            DropdownMenuButton('June',on_click=Func(__cal,6), ignore_paused=True),
-                            DropdownMenuButton('July',on_click=Func(__cal,7), ignore_paused=True),
-                            DropdownMenuButton('August',on_click=Func(__cal,8), ignore_paused=True),
-                            DropdownMenuButton('September',on_click=Func(__cal,9), ignore_paused=True),
-                            DropdownMenuButton('October',on_click=Func(__cal,10), ignore_paused=True),
-                            DropdownMenuButton('November',on_click=Func(__cal,11), ignore_paused=True),
-                            DropdownMenuButton('December',on_click=Func(__cal,12), ignore_paused=True)
+        self._month_button_list=[
+                            DropdownMenuButton('January: 01',on_click=Func(__cal,1), ignore_paused=True),
+                            DropdownMenuButton('February: 02',on_click=Func(__cal,2), ignore_paused=True),
+                            DropdownMenuButton('March: 03',on_click=Func(__cal,3), ignore_paused=True),
+                            DropdownMenuButton('April: 04',on_click=Func(__cal,4), ignore_paused=True),
+                            DropdownMenuButton('May: 05',on_click=Func(__cal,5), ignore_paused=True),
+                            DropdownMenuButton('June: 06',on_click=Func(__cal,6), ignore_paused=True),
+                            DropdownMenuButton('July: 07',on_click=Func(__cal,7), ignore_paused=True),
+                            DropdownMenuButton('August: 08',on_click=Func(__cal,8), ignore_paused=True),
+                            DropdownMenuButton('September: 09',on_click=Func(__cal,9), ignore_paused=True),
+                            DropdownMenuButton('October: 10',on_click=Func(__cal,10), ignore_paused=True),
+                            DropdownMenuButton('November: 11',on_click=Func(__cal,11), ignore_paused=True),
+                            DropdownMenuButton('December: 12',on_click=Func(__cal,12), ignore_paused=True)
                           ]
         self._wp = WindowPanel(
                         title='Pause Menu',
@@ -355,7 +408,7 @@ class SolarSystem():
                                                     bar_color = color.yellow),
                                 temp_y_t:= Text('Set Year [range {} to {}]'.format(self._start_year,self._end_year)),
                                 temp_year_field := InputField( limit_content_to='0123456789', active=False),                 
-                                temp_day_selector:= ButtonGroup(['Day'],max_selection=1,min_selection=0,spacing=(0.05,0.05,0)),
+                                temp_day_selector:= ButtonGroup(['Day'],max_selection=1,min_selection=1,spacing=(0.05,0.05,0)),
                                 temp_t_t:= Text('Set Time HH:MM:SS'),
                                 temp_time_field := InputField( limit_content_to=':0123456789', active=False),
                                 temp_d_f_t:= Text('Set Date Change Frequency'),
@@ -389,14 +442,14 @@ class SolarSystem():
         self._month_drop.world_position=self._year_selector.world_position+Vec3(-7.5,-1,0)
         self._month_drop.scale=0.5
         self._month_drop.text='Select Month'
-        height=self._month_drop.down*2
-        for i in month_button_list:
-            i.parent=self._month_drop
-            i.scale=1
-            i.position=height
-            height+=i.down*2
-        self._month_drop.buttons=month_button_list
+        
+            #self._month_drop.buttons=self._month_button_list
+        self.__set_month_drop_buttons(self._month_button_list[:self._start_arr[1]-1],initial=True)
+        self.__set_month_drop_buttons(self._month_button_list[self._start_arr[1]-1:])
+        self._month_drop.buttons=self._month_button_list
+        
         self._month_drop.disable()
+        
         
         
         temp_t_t.position=self._month_drop.position+Vec3(-0.1,-7,0) 
@@ -440,6 +493,51 @@ class SolarSystem():
         self._info = Text(scale =1, y = 0.0, x=-0.85, wordwrap=30, color=color.tint(color.white,0.9))
         self._info.current_color=color.red
         self._info._visible=False
+    
+    def __set_month_drop_buttons(self,temp_button_list,initial=False):
+            if initial:
+                height=Vec3(9999,9999,9999)
+            else:    
+                height=self._month_drop.down*2
+            for i in temp_button_list:
+                i.parent=self._month_drop
+                i.scale=1
+                i.position=height
+                height+=i.down*2
+        
+
+    def __year_selector_enable(self,status: bool):
+            if status:
+                self._month_drop.disable()
+                self._year_selector.text_color=color.green
+                temp_input_year=int(self._year_selector.text)
+                
+                
+                if temp_input_year==self._start_year:
+                    temp_buttons=self._month_button_list[self._start_arr[1]-1:]
+                elif temp_input_year==self._end_year:
+                    temp_buttons=self._month_button_list[:self._end_arr[1]]
+                else:
+                    temp_buttons=self._month_button_list
+                #print(len(temp_buttons),' ',self._year,self._start_arr)
+                self.__set_month_drop_buttons(temp_button_list=temp_buttons)   
+                
+
+                self._month_drop.buttons=temp_buttons
+                
+                
+                self._month_drop.enable()
+                    
+                
+            else:
+                self._year_selector.text_color=color.red
+                self._month_drop.disable()
+                try:
+                    self._day_selector.disable()
+                    
+                except:
+                    pass
+    
     
     def __camera_control(self):      
         if self._mouse_drag and self._mouse_drag_initial!=None:
@@ -548,32 +646,20 @@ class SolarSystem():
         #print(self._year,' ',self._month,' ',self._day)
 
         
+
         if self._pause_menu_enabled:
             self._sensi = self._slider.value/1000
             if self._year_selector.active:
                 if self._year_selector.text!='':
                     if int(self._year_selector.text) in range(self._start_year,self._end_year+1):
-                        self._year_selector.text_color=color.green
-                        self._month_drop.enable()
+                        self.__year_selector_enable(True)
                         
                     else:
-                        self._year_selector.text_color=color.red
-                        self._month_drop.disable()
-                        try:
-                            self._day_selector.disable()
-                            
-                        except:
-                            pass
-            
+                        self.__year_selector_enable(False)
+
             if not self._year_selector.active:
                 if self._year_selector.text=="":
-                    self._year_selector.text_color=color.red
-                    self._month_drop.disable()
-                    try:
-                        self._day_selector.disable()
-                        
-                    except:
-                        pass
+                    self.__year_selector_enable(False)
 
                 elif self._month_drop.enabled==True:
                     self._year=int(self._year_selector.text)
@@ -604,7 +690,11 @@ class SolarSystem():
                 self._time_selector_field.text=self._hour+':'+self._minute+':'+self._second
                 self._time_selector_field.text_color=color.green
                 
-            self._date_frequency=self._date_frequency_button.value    
+            self._date_frequency=self._date_frequency_button.value  
+            if self._day_selector.value!='Day':
+                self._day=self._day_selector.value
+
+                
 
             if self._update_frequency_field.active:
                 temp=self._update_frequency_field.text
@@ -678,7 +768,7 @@ class SolarSystem():
 
             if self._cur_year_dict_index==len(self._dates):
                 self._year +=1
-                if self._year>=self._end_year:  
+                if self._year>self._end_year:  
                     self._year=self._start_year     
                 self.__gen_dates()
                 self._cur_year_dict_index=0
