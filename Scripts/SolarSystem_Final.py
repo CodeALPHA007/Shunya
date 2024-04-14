@@ -340,16 +340,19 @@ class SolarSystem():
             self._current_focus=None
             for i in self._master_planet_dict.keys():
                 self._master_planet_dict[i]['text_tag_entity'].visible=True
+            #self.__focus('None')
+
         else:
             self._toggle_free=False
             self._master_planet_dict[planet_name]['follow']=True
-            self._current_focus=planet_name    
+            self._current_focus=planet_name
+            self.__focus(planet_name)    
 
     def __scale_sensitivity(self):
         self._sensi = self._slider.value/1000
 
 
-    def __focus(self,planet_name: str, cur_et):
+    def __focus(self,planet_name: str):
         if planet_name==None:
                 self._mouse_enabled_movement=False
                 camera.parent=scene
@@ -861,6 +864,7 @@ class SolarSystem():
                                                          camera.z,
                                                          ''.join('\n'+e for e in self._active_action_list)) 
 
+
         if self._toggle_free:
             self._info.disable()
             self._info._visible=False
@@ -881,9 +885,8 @@ class SolarSystem():
                                                                                         )  
                             except:
                                 pass    
+        
         else:
-            
-            
         
             self._delay_counter+=time.dt
             
@@ -918,7 +921,7 @@ class SolarSystem():
             if self._delay_counter==0:
                 for planet in self._master_planet_dict.keys():
                     
-                    self.__focus(planet,temp_cur_et)
+                    #self.__focus(planet,temp_cur_et)
                     if planet!='sun':
                         temp_obs_planet_id=self._master_planet_dict[planet]['obs_planet_id']
                         if temp_obs_planet_id!=10:
