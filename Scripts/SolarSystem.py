@@ -4,779 +4,923 @@ import datetime
 import numpy
 from collections import deque
 import xarray as xr
+import cftime
 from ursina.prefabs.dropdown_menu import DropdownMenu, DropdownMenuButton
 import time as Time
-
-spiceypy.furnsh("../Kernels/lsk/naif0012.tls")
-spiceypy.furnsh("../Kernels/spk/de430.bsp")
-spiceypy.furnsh("../Kernels/spk/jup365.bsp")    #change
-spiceypy.furnsh("../Kernels/spk/sat441.bsp")    #change
-spiceypy.furnsh("../Kernels/spk/nep097.bsp")    #change
-spiceypy.furnsh("../Kernels/spk/ura111l.bsp")   #change
-spiceypy.furnsh("../Kernels/spk/mar097.bsp")    #change
-#spiceypy.furnsh("../Kernels/spk/codes_300ast_20100725.bsp")    #change
-#spiceypy.furnsh("../Kernels/spk/ceres-2003-2016.bsp")    #change
-spiceypy.furnsh("../Kernels/spk/ceres_1900_2100.bsp")    #change
-spiceypy.furnsh("../Kernels/spk/plu058.bsp")    #change
-
 import pandas as pd
-dates=[]
-start_date = '{}-01-04'         #change
-end_date = '{}-12-31'
-year=1900                  #change
-toggle_trail=False
+import calendar
+import json
 
-multiplier=1000
-def km2au(dist_in_km: float):
-    global multiplier
-    return (spiceypy.convrt(dist_in_km,'km','au'))*multiplier
-
-def gen_pos(target: int, cur_et,obs:int):   #change
-    global multiplier
-    planet_state_wrt_sun,earth_sun_light_time=spiceypy.spkgeo(targ=target,et=cur_et
-                                                        ,ref="ECLIPJ2000",obs=obs)  #change
-    x,y,z=planet_state_wrt_sun[:3]
-    #earth_vel_x,earth_vel_y,earth_vel_z=earth_state_wrt_sun[3:]
-    x=spiceypy.convrt(x,'km','au')*multiplier
-    y=spiceypy.convrt(y,'km','au')*multiplier
-    z=spiceypy.convrt(z,'km','au')*multiplier
-    return Vec3(x,y,z)
+class SolarSystem():
+    def __init__(self):
+        self.__set_date_year()
+        self.__set_kernels()
+        self.__set_constants()
+        self.__create_planet_dict()
+        #self.__gen_dates(self._start_date.format(self._year),self._end_date.format(self._year))
+        self.__gen_dates()
 
 
-def gen_dates(start_date,end_date):
-    global dates
-    dates.clear()
-    dates=list(xr.cftime_range(start_date, end_date, freq='D'))
-    #dates = list(pd.date_range(start_date, end_date, freq='M'))
+    def __set_date_year(self):    
+        #self._start_date = "{}-01-04"
+        #self._end_date = "{}-12-31" 
+        self._start_year=0
+        self._end_year=0
+        self._year=self._start_year
+        self._month="01"
+        self._day="01"
+        self._hour="00"
+        self._minute='00'
+        self._second='00'
+        self._date_frequency='Daily'
+        self._start_date=cftime.datetime
+        self._end_date=cftime.datetime
+        self._end_arr=[]
+        self._start_arr=[]
 
-gen_dates(start_date.format(year),end_date.format(year))
+        
+    def __set_start_end_date(self,forced=False):
+        if forced:
+            self._start_date=cftime.datetime(year=self._year,
+                                                    month=int(self._month),
+                                                    day=int(self._day),
+                                                    hour=int(self._hour),
+                                                    minute=int(self._minute),
+                                                    second=int(self._second)
+                                            )
+        else:    
+            if self._year!=self._start_year:
+                self._start_date=cftime.datetime(year=self._year,
+                                                month=1,
+                                                day=1,
+                                                hour=int(self._hour),
+                                                minute=int(self._minute),
+                                                second=int(self._second)
+                                            )    
+            else:
+                self._start_date=cftime.datetime(year=self._year,
+                                                month=self._start_arr[1],
+                                                day=self._start_arr[2]+1,
+                                                hour=0,
+                                                minute=0,
+                                                second=0
+                                            )
+
+
+        if self._year!=self._end_year:
+            self._end_date=cftime.datetime(year=self._year,
+                                            month=12,
+                                            day=31,
+                                            hour=int(self._hour),
+                                            minute=int(self._minute),
+                                            second=int(self._second)
+                                        )
+        else:
+            self._end_date=cftime.datetime(year=self._year,
+                                            month=self._end_arr[1],
+                                            day=self._end_arr[2]-1,
+                                            hour=0,
+                                            minute=0,
+                                            second=0
+                                        )
+
+    def __set_kernels(self):  
+        """ spiceypy.furnsh("../Kernels/lsk/naif0012.tls")
+        spiceypy.furnsh("../Kernels/spk/de430.bsp")
+        spiceypy.furnsh("../Kernels/spk/jup365.bsp")    #change
+        spiceypy.furnsh("../Kernels/spk/sat441.bsp")    #change
+        spiceypy.furnsh("../Kernels/spk/nep097.bsp")    #change
+        spiceypy.furnsh("../Kernels/spk/ura111l.bsp")   #change
+        spiceypy.furnsh("../Kernels/spk/mar097.bsp")    #change
+        #spiceypy.furnsh("../Kernels/spk/codes_300ast_20100725.bsp")    #change
+        #spiceypy.furnsh("../Kernels/spk/ceres-2003-2016.bsp")    #change
+        spiceypy.furnsh("../Kernels/spk/ceres_1900_2100.bsp")    #change
+        spiceypy.furnsh("../Kernels/spk/plu058.bsp")    #change
+        """
+        with open("../Kernels/kernel_info.json",'r') as json_file:
+            kernel_info=json.load(json_file)
+        #print(kernel_info)    
+        temp_start_dt_arr=[]
+        temp_end_dt_arr=[]
+        for kernel in kernel_info.keys():
+            spiceypy.furnsh(kernel_info[kernel]['path'])
+            temp_start_dt_arr.append(kernel_info[kernel]['start_date'])
+            temp_end_dt_arr.append(kernel_info[kernel]['end_date'])
+        temp_start=str(max(temp_start_dt_arr))
+        temp_end=str(min(temp_end_dt_arr)) 
+        self._start_year=int(temp_start[:4])
+        self._year=self._start_year
+        self._month=temp_start[4:6]
+        self._day=temp_start[6:] 
+        self._start_arr=[int(temp_start[:4]),
+                       int(temp_start[4:6]),
+                       int(temp_start[6:])
+                       ]
+        
+        self._end_arr=[int(temp_end[:4]),
+                       int(temp_end[4:6]),
+                       int(temp_end[6:])
+                       ]
+        self._end_year=self._end_arr[0]
+            
+            
+
+    def __set_constants(self):
+        self._toggle_trail=False
+        self._multiplier=1000
+        self._cur_year_dict_index=0
+        self._year_text='<red>CURRENT DATE</red>\n<green>{}-{}-{}</green><red>\nCURRENT TIME</red>\n<green>{}:{}:{}</green><red>\nZoom</red>\n<green>{}</green>'
+        self._cur_year_txt = Text(scale=1,position=(-0.85,0.45,0))
+        self._sensi=0.005
+        self._current_focus='sun'
+        self._toggle_free=False
+        
+        self._dates=[]
+        
+
+        camera.parent=scene
+        self._default_zoom=-20
+        camera.z=self._default_zoom
+        self._max_far_zoom=300000
+        camera.clip_plane_far_setter(self._max_far_zoom*2)
+        self._collider_ray = raycast(origin= camera.position+camera.forward*5,
+                                     ignore=(camera,), 
+                                     direction= camera.forward,
+                                     distance= 10, 
+                                     debug= True
+                                     )         
+            
+
+        self._drop_down_text='Focus on: {}'
+
+        self._mouse_enabled_movement=False
+
+       
+
+        self._mouse_drag=False
+        self._mouse_drag_initial=None
+
+        self._delay_counter=0
+
+        self._drop_menu=Entity(visible=False)
+        self._slider=Entity(visible=False)
+
+        self._thick=0.05
+        self._curve_mode='line'
+        
+        self._info = Entity(visible=False)    
+        self._info_text="<red>INFO BOARD</red>\n<white>NAME: </white><green>{}</green>\n<white>PLANET ID: </white><green>{}</green>\n<white>RADIUS: </white><green>{} km</green>\n<white>AXIAL ROTATION: </white><green>{}⁰/sec</green>\n<white>TILT: </white><green>{}⁰</green>"
+        
+        self._temp_position=Vec2(0,0)
+
+        self._pause_menu_enabled=False
+
+        self._month_drop=Entity(visible=False)
+        
+        self._pause=False
+
+        self._update_frequency=1.0
+
+        self._date_frequency_options_dict={'Hourly':'h',
+                                           'Daily': 'D',
+                                           'Monthly': 'ME'
+                                           }
+        
+        self._axial_rotation_multiplier={'Hourly':3600,
+                                         'Daily': 86400,
+                                        'Monthly': 2629845}
+        
+        self._ursina_color={'violet':color.violet,
+                           'cyan':color.cyan,
+                           'blue':color.blue,
+                           'green':color.green,
+                           'yellow':color.yellow,
+                           'orange':color.orange,
+                           'red':color.red,
+                           'pink':color.pink,
+                           'white':color.white
+                        }
+        
+        
     
-i=0
+    def __km2au(self,val_km: float):
+        return (spiceypy.convrt(val_km,'km','au'))*self._multiplier
+
+    def __gen_pos(self,target: int, cur_et , obs:int):   #change
+        temp_planet_state_wrt_sun,temp_earth_sun_light_time=spiceypy.spkgeo(targ=target,
+                                                                  et=cur_et,
+                                                                  ref="ECLIPJ2000",
+                                                                  obs=obs
+                                                                  )  #change
+        x,y,z=temp_planet_state_wrt_sun[:3]
+        x=spiceypy.convrt(x,'km','au')*self._multiplier
+        y=spiceypy.convrt(y,'km','au')*self._multiplier
+        z=spiceypy.convrt(z,'km','au')*self._multiplier
+        return Vec3(x,y,z)
+
+
+    def __gen_dates(self,forced=False):
+        self._dates.clear()
+        
+        self.__set_start_end_date(forced)
+        _, temp_number_of_days = calendar.monthrange(self._year, int(self._month))
+
+        if self._date_frequency_options_dict[self._date_frequency]=='ME' and int(self._day)<temp_number_of_days:
+            #print([self._year,self._month,self._day,temp_number_of_days])
+            self._dates.clear()
+            for m in range (int(self._month),13):
+                
+                if self._year==self._end_year and m==self._end_arr[1]:
+                    if int(self._day)>self._end_arr[2]:
+                        self._day=self._end_arr[2]-1
+                cf_time_object=cftime.datetime(year=self._year,
+                                               month=m,
+                                               day=int(self._day),
+                                               hour=int(self._hour),
+                                               minute=int(self._minute),
+                                               second=int(self._second)
+                                               )
+                self._dates.append(cf_time_object)
+        else:
+            self._dates=list(xr.cftime_range(self._start_date, self._end_date, freq=self._date_frequency_options_dict[self._date_frequency]))
+            if self._year==self._end_year and len(self._dates) < (self._end_arr[1]-int(self._month)+1):
+                cf_time_object=cftime.datetime(year=self._year,
+                                               month=self._end_arr[1],
+                                               day=self._end_arr[2]-1,
+                                               hour=int(self._hour),
+                                               minute=int(self._minute),
+                                               second=int(self._second)
+                                               )
+                self._dates.append(cf_time_object)
+                
+        
+        #print(self._start_date)
+        #print(self._end_date)
+        #print(self._dates)
+        
+
+    
+    def __create_planet_dict(self):
+        with open(r"..\Assets\Planets_info.json",'r') as planet_json_file:
+            self.planets_info=json.load(planet_json_file)
+            
+        
+        self._master_planet_dict={}
+        temp_planet_details_dict={
+                                  'entity': None,
+                                  'planet_id': 0,
+                                  'axial_rotation': 0,
+                                  "sibling_entity": None,
+                                  'obs_planet_id' : 0,
+                                  "text_tag_entity": None,
+                                  "trail_deque": None,
+                                  "curve_renderer": None,
+                                  'follow': False,
+                                  'trail_color': None 
+                                  }
+        for planet in self.planets_info.keys():
+            self._master_planet_dict[planet]=temp_planet_details_dict.copy()
+            if planet in ["saturn_ring"]:
+                self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
+                                                                rotation_x = self.planets_info[planet]['rotation_x'],
+                                                                rotation_z= self.planets_info[planet]['rotation_z'],
+                                                                scale=6.68459e-9*10000,
+                                                                texture=self.planets_info[planet]['texture']
+                                                            )
+
+
+            else:
+                if self.planets_info[planet]['texture']=='None':
+                    self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
+                                                                    rotation_x = self.planets_info[planet]['rotation_x'],
+                                                                    rotation_z= self.planets_info[planet]['rotation_z'],
+                                                                    scale=self.__km2au(self.planets_info[planet]['radius_km'])*2
+                                                                    
+                                                                    
+                                                                )
+
+                else:    
+                    self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
+                                                                        rotation_x = self.planets_info[planet]['rotation_x'],
+                                                                        rotation_z= self.planets_info[planet]['rotation_z'],
+                                                                        scale=self.__km2au(self.planets_info[planet]['radius_km'])*2,
+                                                                        texture=self.planets_info[planet]['texture']
+                                                                    )
+                    
+
+
+            
+            self._master_planet_dict[planet]['planet_id']=self.planets_info[planet]['id']
+            self._master_planet_dict[planet]['axial_rotation']=self.planets_info[planet]['rotation_y']
+            self._master_planet_dict[planet]['sibling_entity']=Entity(name=planet, visible=True, collider='box',
+                                                                      scale=self.__km2au(self.planets_info[planet]['radius_km'])*2,
+                                                                     )
+            self._master_planet_dict[planet]['obs_planet_id']=self.planets_info[planet]['obs_planet_id']
+            
+            self._master_planet_dict[planet]['text_tag_entity']=Text(parent=self._master_planet_dict[planet]['sibling_entity'],
+                                                                     text=planet, 
+                                                                     scale=camera.z * 0.4
+                                                                     )
+
+            if planet!='sun':
+                self._master_planet_dict[planet]['trail_deque']=deque([],maxlen=80)
+                self._master_planet_dict[planet]['curve_renderer']=Entity()
+                self._master_planet_dict[planet]['trail_color']=self._ursina_color[self.planets_info[planet]['color']]
+    def __set_all_follow_false(self):
+        for i in self._master_planet_dict.keys():
+            self._master_planet_dict[i]['follow']=False  
+            self._master_planet_dict[i]['text_tag_entity'].visible=False 
+
+    def __set_follow(self,planet_name: str):
+        self.__set_all_follow_false()
+        if planet_name=='free':
+            self._toggle_free=True
+            camera.parent=scene
+            camera.position=Vec3(0,0,self._default_zoom)
+            self._current_focus=None
+            for i in self._master_planet_dict.keys():
+                self._master_planet_dict[i]['text_tag_entity'].visible=True
+        else:
+            self._toggle_free=False
+            self._master_planet_dict[planet_name]['follow']=True
+            self._current_focus=planet_name    
+
+    def __scale_sensitivity(self):
+        self._sensi = self._slider.value/1000
+
+   
+
+    def __focus(self,planet_name: str, cur_et):
+        if planet_name==None:
+                self._mouse_enabled_movement=False
+                camera.parent=scene
+                camera.look_at(self._master_planet_dict['sun']['sibling_entity'])
+                camera.position=(0,10,self._default_zoom)
+                camera.look_at(self._master_planet_dict['sun']['sibling_entity'])
+                self._master_planet_dict['sun']['follow']=False
+                self._info._visible=False
+
+        elif self._master_planet_dict[planet_name]['follow']:
+            self._mouse_enabled_movement=False
+            camera.position=Vec3(0,0,self._default_zoom)
+            camera.rotation=Vec3(0,0,0)
+            camera.parent=self._master_planet_dict[planet_name]['sibling_entity']
+            camera.position=Vec3(0,0,0)
+            camera.z=self._default_zoom
+            self._master_planet_dict[planet_name]['follow']=False
+            camera._always_on_top=True
+            self._info.enable()
+            self._info._visible=True
+            self._info.text=self._info_text.format( planet_name, 
+                                                    self._master_planet_dict[planet_name]['planet_id'],
+                                                    self.planets_info[planet_name]['radius_km'],
+                                                    self._master_planet_dict[planet_name]['axial_rotation'],
+                                                    self.planets_info[planet_name]['rotation_z']
+                                                    )
+                    
+
+    def load_widgets(self):
+        
+        def __set_inputfield_inactive(inputfield):
+            inputfield.active=False
+
+        #Focus drop down list
+        button_list=[
+                    DropdownMenuButton('Free rotation',on_click=Func(self.__set_follow,'free')),
+                    DropdownMenuButton('Sun',on_click=Func(self.__set_follow,'sun')),
+                    DropdownMenuButton('Mercury',on_click=Func(self.__set_follow,'mercury')),
+                    DropdownMenuButton('Venus',on_click=Func(self.__set_follow,'venus')),
+                    DropdownMenu(text='Earth and Moon',buttons=[DropdownMenuButton('Earth',on_click=Func(self.__set_follow,'earth')),
+                                                                DropdownMenuButton('Moon',on_click=Func(self.__set_follow,'moon'))],
+                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
+                    DropdownMenu(text='Mars and moons',buttons=[DropdownMenuButton('Mars',on_click=Func(self.__set_follow,'mars')),
+                                                                DropdownMenuButton('Phobos',on_click=Func(self.__set_follow,'phobos')),
+                                                                DropdownMenuButton('Deimos',on_click=Func(self.__set_follow,'deimos'))],
+                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
+                    DropdownMenu(text='Jupiter and moons',buttons=[DropdownMenuButton('Jupiter',on_click=Func(self.__set_follow,'jupiter')),
+                                                                    DropdownMenuButton('Ganymede',on_click=Func(self.__set_follow,'ganymede')),
+                                                                    DropdownMenuButton('Callisto',on_click=Func(self.__set_follow,'callisto')),
+                                                                    DropdownMenuButton('Io',on_click=Func(self.__set_follow,'io')),
+                                                                    DropdownMenuButton('Europa',on_click=Func(self.__set_follow,'europa'))],       #change
+                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
+                    DropdownMenu(text='Saturn and moons',buttons=[DropdownMenuButton('Saturn',on_click=Func(self.__set_follow,'saturn')),
+                                                                    DropdownMenuButton('Titan',on_click=Func(self.__set_follow,'titan')),
+                                                                    DropdownMenuButton('Rhea',on_click=Func(self.__set_follow,'rhea'))],           #change
+                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
+                    DropdownMenu(text='Uranus and Titania',buttons=[DropdownMenuButton('Uranus',on_click=Func(self.__set_follow,'uranus')),
+                                                                    DropdownMenuButton('Titania',on_click=Func(self.__set_follow,'titania')),],    #change
+                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
+                    DropdownMenu(text='Neptune and Triton',buttons=[DropdownMenuButton('Neptune',on_click=Func(self.__set_follow,'neptune')),
+                                                                    DropdownMenuButton('Triton',on_click=Func(self.__set_follow,'triton'))],      #change
+                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
+                    DropdownMenu(text='Pluto and Charon',buttons=[DropdownMenuButton('Pluto',on_click=Func(self.__set_follow,'pluto')),
+                                                                    DropdownMenuButton('Charon',on_click=Func(self.__set_follow,'charon'))],      #change
+                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
+                    DropdownMenuButton('Ceres',on_click=Func(self.__set_follow,'ceres'))                          #change
+                    ]
+
+
+        destroy(self._drop_menu)
+        self._drop_menu=DropdownMenu(x=-.60,y=0.45,text=self._drop_down_text.format(self._current_focus), 
+                    buttons=button_list,color=color.white,text_color=color.red,highlight_color=color.green,
+                    scale=(0.3,0.03,0.0))
+
+    
+        #Pause menu
+        
+        def __cal(x: int):
+                     
+            temp=str(x)
+            if int(temp)%10==int(temp):
+                temp="0{}".format(int(temp))
+            self._month=temp
+            self._month_drop.text='Month: '+self._month
+        
+            temp_days=calendar.month(self._year,x).split()[9:]
+            temp_input_year=int(self._year_selector.text)
+            
+            if temp_input_year==self._end_year:
+                if int(self._month)==self._end_arr[1]:
+                    temp_days=temp_days[:self._end_arr[2]-1]
+            
+            elif temp_input_year==self._start_year:
+                if int(self._month)==self._start_arr[1]:
+                    temp_days=temp_days[self._start_arr[2]-1:]
+            
+            
+            self._day_selector.options=temp_days
+            self._day_selector.default_values=(self._day,)
+            self._day_selector.enable()
+        
+            def on_value_changed():
+                temp=str(self._day_selector.value)
+                if int(temp)%10==int(temp):
+                    temp="0{}".format(int(temp))
+                    self._year_selector.active=False
+            self._day_selector.on_value_changed = on_value_changed
+
+
+        self._month_button_list=[
+                            DropdownMenuButton('January: 01',on_click=Func(__cal,1), ignore_paused=True),
+                            DropdownMenuButton('February: 02',on_click=Func(__cal,2), ignore_paused=True),
+                            DropdownMenuButton('March: 03',on_click=Func(__cal,3), ignore_paused=True),
+                            DropdownMenuButton('April: 04',on_click=Func(__cal,4), ignore_paused=True),
+                            DropdownMenuButton('May: 05',on_click=Func(__cal,5), ignore_paused=True),
+                            DropdownMenuButton('June: 06',on_click=Func(__cal,6), ignore_paused=True),
+                            DropdownMenuButton('July: 07',on_click=Func(__cal,7), ignore_paused=True),
+                            DropdownMenuButton('August: 08',on_click=Func(__cal,8), ignore_paused=True),
+                            DropdownMenuButton('September: 09',on_click=Func(__cal,9), ignore_paused=True),
+                            DropdownMenuButton('October: 10',on_click=Func(__cal,10), ignore_paused=True),
+                            DropdownMenuButton('November: 11',on_click=Func(__cal,11), ignore_paused=True),
+                            DropdownMenuButton('December: 12',on_click=Func(__cal,12), ignore_paused=True)
+                          ]
+        self._wp = WindowPanel(
+                        title='Pause Menu',
+                        content=(
+                                Text('Adjust Sensitivity'),
+                                temp_slider := Slider(0, 20, default=5,
+                                                    height=Text.size, 
+                                                    y=-0.4, x=-0.8, 
+                                                    step=1, dynamic= True, 
+                                                    on_value_changed=self.__scale_sensitivity, 
+                                                    vertical=False,
+                                                    bar_color = color.yellow),
+                                temp_y_t:= Text('Set Year [range {} to {}]'.format(self._start_year,self._end_year)),
+                                temp_year_field := InputField( limit_content_to='0123456789', active=False),                 
+                                temp_day_selector:= ButtonGroup(['Day'],max_selection=1,min_selection=1,spacing=(0.05,0.05,0)),
+                                temp_t_t:= Text('Set Time HH:MM:SS'),
+                                temp_time_field := InputField( limit_content_to=':0123456789', active=False),
+                                temp_d_f_t:= Text('Set Date Change Frequency'),
+                                temp_date_frequency_button := ButtonGroup(self._date_frequency_options_dict.keys(),
+                                                                          max_selection=1,min_selection=1,
+                                                                          default=self._date_frequency,
+                                                                          spacing=(0.1,0,0)
+                                                                          ),
+                                temp_u_f_t:= Text('Set Update Frequency: '),
+                                temp_update_frequency_field := InputField( limit_content_to='.0123456789', active=False),                 
+                                                                                                             
+                                ),
+                        popup=True
+                        )
+        self._slider=temp_slider
+        self._slider.knob.ignore_paused= True
+        self._slider.ignore_paused=True
+        
+        self._year_selector=temp_year_field
+        self._year_selector.world_position=temp_y_t.world_position+Vec3(4.5,-1.5,0)
+        self._year_selector.text=str(self._year)
+        self._year_selector.submit_on=['enter',]
+        self._year_selector.on_submit=Func(__set_inputfield_inactive,self._year_selector)
+        
+        self._month_drop=DropdownMenu()
+    
+        self._day_selector=temp_day_selector
+        self._day_selector.disable()
+        
+        self._month_drop.parent=self._wp
+        self._month_drop.world_position=self._year_selector.world_position+Vec3(-7.5,-1,0)
+        self._month_drop.scale=0.5
+        self._month_drop.text='Select Month'
+        
+            #self._month_drop.buttons=self._month_button_list
+        self.__set_month_drop_buttons(self._month_button_list[:self._start_arr[1]-1],initial=True)
+        self.__set_month_drop_buttons(self._month_button_list[self._start_arr[1]-1:])
+        self._month_drop.buttons=self._month_button_list
+        
+        self._month_drop.disable()
+        
+        
+        
+        temp_t_t.position=self._month_drop.position+Vec3(-0.1,-7,0) 
+        
+        self._time_selector_field=temp_time_field
+        self._time_selector_field.world_position=temp_t_t.world_position+Vec3(4.5,-1.5,0) 
+        self._time_selector_field.submit_on=['enter',]
+        self._time_selector_field.on_submit=Func(__set_inputfield_inactive,self._time_selector_field)
+        
+
+        temp_d_f_t.position=temp_t_t.position+Vec3(1.125,0,0)
+        
+        self._date_frequency_button=temp_date_frequency_button
+        def _date_frequency_button_on_value_changed():
+                temp=str(self._date_frequency_button.value)
+                if temp in self._date_frequency_options_dict.keys():
+                    self._date_frequency=temp
+                    #self.__gen_dates(forced=True)
+
+        self._date_frequency_button.on_value_changed = _date_frequency_button_on_value_changed
+
+        self._date_frequency_button.world_position=temp_d_f_t.world_position+Vec3(-0.5,-1,0) 
+
+        temp_u_f_t.position=temp_t_t.position+Vec3(0,-3.5,0) 
+        
+        self._update_frequency_field=temp_update_frequency_field
+        self._update_frequency_field.world_position=temp_u_f_t.world_position+temp_u_f_t.right*0.50 
+        self._update_frequency_field.text=str(self._update_frequency)
+        self._update_frequency_field.submit_on=['enter',]
+        self._update_frequency_field.on_submit=Func(__set_inputfield_inactive,self._update_frequency_field)
+        
+        #self._wp.y = self._wp.panel.scale_y / 2 * self._wp.scale_y
+        self._wp.y=0.475
+        self._wp.disable()
+        self._wp._always_on_top=True
+        self._wp.bg.on_click=None
+        self._wp.panel.world_scale=Vec3(20,25,0)
+        try:
+            self._wp.panel.texture=r'..\Assets\flipped_vertical_gradient'
+        except:
+            self._wp.panel.texture='vertical_gradient'
+        self._wp.panel.color=color.hsv(200,0.6,0.1,1)
+
+        #destroy(self._slider)
+        
+
+        
+
+        self._info = Text(scale =1, y = 0.0, x=-0.85, wordwrap=30, color=color.tint(color.white,0.9))
+        self._info.current_color=color.red
+        self._info._visible=False
+    
+    def __set_month_drop_buttons(self,temp_button_list,initial=False):
+            if initial:
+                height=Vec3(9999,9999,9999)
+            else:    
+                height=self._month_drop.down*2
+            for i in temp_button_list:
+                i.parent=self._month_drop
+                i.scale=1
+                i.position=height
+                height+=i.down*2
+        
+
+    def __year_selector_enable(self,status: bool):
+            if status:
+                self._month_drop.disable()
+                self._year_selector.text_color=color.green
+                temp_input_year=int(self._year_selector.text)
+                
+                
+                if temp_input_year==self._start_year:
+                    temp_buttons=self._month_button_list[self._start_arr[1]-1:]
+                elif temp_input_year==self._end_year:
+                    temp_buttons=self._month_button_list[:self._end_arr[1]]
+                else:
+                    temp_buttons=self._month_button_list
+                #print(len(temp_buttons),' ',self._year,self._start_arr)
+                self.__set_month_drop_buttons(temp_button_list=temp_buttons)   
+                
+
+                self._month_drop.buttons=temp_buttons
+                
+                
+                self._month_drop.enable()
+                    
+                
+            else:
+                self._year_selector.text_color=color.red
+                self._month_drop.disable()
+                try:
+                    self._day_selector.disable()
+                    
+                except:
+                    pass
+    
+    
+    def __camera_control(self):      
+        if self._mouse_drag and self._mouse_drag_initial!=None:
+            temp_x=mouse.x - self._mouse_drag_initial[0]
+            temp_y=mouse.y - self._mouse_drag_initial[1]
+
+            camera.position+=abs(camera.z) * (camera.up*abs(min(0,temp_y))+camera.down*abs(max(0,temp_y))) * time.dt * self._sensi * 100
+            camera.position+=abs(camera.z) * (camera.right*abs(min(0,temp_x))+camera.left*abs(max(0,temp_x))) * time.dt * self._sensi *100
+    
+            
+        if self._collider_ray.entity==None:
+            camera.position +=camera.forward *100 * held_keys['w'] * time.dt * abs(camera.z) * 0.005
+        camera.position +=camera.back * 100 * held_keys['s'] * time.dt * abs(camera.z) * 0.005
+
+        
+        camera.position +=camera.left * 10 * held_keys['a'] * time.dt
+        camera.position +=camera.right * 10 * held_keys['d'] * time.dt
+        camera.position +=camera.up * held_keys['z'] * time.dt
+        camera.position +=camera.down  * held_keys['x'] * time.dt
+        
+        camera.rotate(Vec3(10 *held_keys['down arrow'] * time.dt ,
+                              10 *held_keys['right arrow'] * time.dt ,
+                              10 *held_keys['c'] * time.dt))
+
+        camera.rotate(Vec3(-10 *held_keys['up arrow'] * time.dt ,
+                              -10 *held_keys['left arrow'] * time.dt ,
+                              -10 *held_keys['v'] * time.dt))
+
+
+        if self._mouse_enabled_movement and self._toggle_free:
+            
+            self._mouse_drag=False
+            self._mouse_drag_initial=None
+            
+            temp_pos=(camera.down*mouse.y + camera.left*mouse.x) * abs(camera.z) * 0.5
+            camera.position=Vec3(temp_pos[0] ,
+                                 temp_pos[1] ,
+                                 camera.position[2])
+
+    
+
+    def custom_input(self,key):
+        if key=='scroll up':
+            if self._collider_ray.entity==None:
+                camera.world_position +=camera.forward*abs(camera.z)*self._sensi
+        
+        elif key=='scroll down':
+            camera.world_position +=camera.back*abs(camera.z)*self._sensi
+        
+        elif key=='left mouse down' and not self._mouse_enabled_movement:
+            self._mouse_drag=True
+            if self._mouse_drag_initial==None:
+                self._mouse_drag_initial=mouse.position
+        
+        elif key=='left mouse up' and not self._mouse_enabled_movement:
+            self._mouse_drag=False
+            self._mouse_drag_initial=None
+        
+        elif key in ['m','M']:
+            self._mouse_enabled_movement = not self._mouse_enabled_movement
+        
+        elif key in ['t','T']:
+            if self._toggle_trail:
+                try:
+                    for planet in self._master_planet_dict.keys():
+                        destroy(self._master_planet_dict[planet]['curve_renderer'])
+                except:
+                    pass    
+            self._toggle_trail = not self._toggle_trail 
+
+        elif key in ['f','F']:
+            if window.size!=window.fullscreen_size:
+                self._temp_position=window.position
+                window.size=window.fullscreen_size
+                window.position=Vec2(0,0)
+            else:
+                window.position=self._temp_position
+                window.size=Vec2(1090,582)
+
+        elif key == 'backspace':
+            for planet in self._master_planet_dict.keys():
+                if planet=='sun':
+                    continue
+                try:
+                    destroy(self._master_planet_dict[planet]['curve_renderer'])
+                except:
+                    pass
+                try:
+                    self._master_planet_dict[planet]['trail_deque'].clear()     
+                except:
+                    pass
+        elif key=='escape':
+            self._pause_menu_enabled= not self._pause_menu_enabled
+            if self._pause_menu_enabled:
+                self._pause=True
+                self._drop_menu.disable()
+                self._wp.enable()
+            else:
+                self._pause=False
+                self._drop_menu.enable()
+                self._wp.disable()
+                self.__gen_dates(forced=True)
+                self._cur_year_dict_index=0
+
+        elif key in ['p','P']:
+            self._pause= not self._pause
+        
+  
+
+
+    def custom_update(self):
+        
+        #print(self._year,' ',self._month,' ',self._day)
+
+        
+
+        if self._pause_menu_enabled:
+            self._sensi = self._slider.value/1000
+            if self._year_selector.active:
+                if self._year_selector.text!='':
+                    if int(self._year_selector.text) in range(self._start_year,self._end_year+1):
+                        self.__year_selector_enable(True)
+                        
+                    else:
+                        self.__year_selector_enable(False)
+
+            if not self._year_selector.active:
+                if self._year_selector.text=="":
+                    self.__year_selector_enable(False)
+
+                elif self._month_drop.enabled==True:
+                    self._year=int(self._year_selector.text)
+                
+            else:
+                pass
+            
+            if self._time_selector_field.active:
+                temp=self._time_selector_field.text.replace(':','')
+                self._time_selector_field.text=temp
+                if len(self._time_selector_field.text) in range (1,7):
+                    self._time_selector_field.text_color=color.green
+                        
+                elif len(self._time_selector_field.text)>=7:
+                    self._time_selector_field.text_color=color.red
+                    self._time_selector_field.text=self._time_selector_field.text[:7]
+            else:
+                temp=self._time_selector_field.text
+                temp_temp=''
+                if len(temp)<=6:
+                    temp+='0'*(6-len(temp))
+                    if int(temp[0:2])<24 and int(temp[2:4])<60 and int(temp[4:6])<60:
+                        self._hour=temp[0:2]
+                        self._minute=temp[2:4]
+                        self._second=temp[4:6]
+                        
+                    
+                self._time_selector_field.text=self._hour+':'+self._minute+':'+self._second
+                self._time_selector_field.text_color=color.green
+                
+            #self._date_frequency=self._date_frequency_button.value  
+            if self._day_selector.value!='Day':
+                self._day=self._day_selector.value
+
+                
+
+            if self._update_frequency_field.active:
+                temp=self._update_frequency_field.text
+                if temp.count('.')==2:
+                    self._update_frequency_field.text=temp[:len(temp)-1]
+            else:
+                temp=self._update_frequency_field.text
+                if temp in ['0','0.0','']:
+                    self._update_frequency_field.text=str(self._update_frequency)
+                else:
+                    self._update_frequency=float(temp)
+            
+            return
+    
+        
+        self.__camera_control()
+        if abs(camera.z)>self._max_far_zoom:
+            camera.z=-self._max_far_zoom
+        
+        self._collider_ray = raycast(origin= camera.world_position,
+                                     ignore=(camera,),
+                                     direction= camera.forward,
+                                     distance= 0.3, 
+                                     debug= True
+                                    )
+        
+        self._drop_menu.text=self._drop_down_text.format(self._current_focus)
+        
+        self._cur_year_txt.text = self._year_text.format(self._year,self._month,self._day,
+                                                         self._hour,self._minute,self._second,
+                                                         camera.z) 
+
+        if self._toggle_free:
+            self._info.disable()
+            self._info._visible=False
+
+        if self._pause:
+            if self._toggle_trail :
+                        for planet in self._master_planet_dict.keys():
+                            if planet=='sun':
+                                continue
+                            destroy(self._master_planet_dict[planet]['curve_renderer'])
+                            try:
+                                self._master_planet_dict[planet]['curve_renderer']= Entity(model=Mesh(
+                                                                                                    vertices=self._master_planet_dict[planet]['trail_deque'],
+                                                                                                    mode=self._curve_mode,
+                                                                                                    thickness=self._thick
+                                                                                                    ),
+                                                                                        color=self._master_planet_dict[planet]['trail_color'] 
+                                                                                        )  
+                            except:
+                                pass    
+        else:
+            self._delay_counter+=time.dt
+            
+            temp_cur_utc=str(self._dates[self._cur_year_dict_index])
+            #print(temp_cur_utc)
+            temp_cur_utc=temp_cur_utc.replace(" ",'T')
+            self._year=int(temp_cur_utc[:4])
+            self._month=temp_cur_utc[5:7]
+            T_index=temp_cur_utc.index("T")
+            self._day=temp_cur_utc[8:T_index]
+            self._hour=temp_cur_utc[T_index+1:T_index+3]
+            self._minute=temp_cur_utc[T_index+4:T_index+6]
+            self._second=temp_cur_utc[T_index+7:T_index+9]
+
+            
+            if self._delay_counter>=self._update_frequency:
+                self._cur_year_dict_index += 1
+                self._delay_counter=0
+
+            if self._cur_year_dict_index==len(self._dates):
+                self._year +=1
+                self._month='01'
+                if self._year>self._end_year:  
+                    self._year=self._start_year
+                    #print([int(self._day),self._end_arr[2]-1])
+                    if self._date_frequency_options_dict[self._date_frequency]=='ME' and int(self._day)==self._end_arr[2]-1:
+                        self._day='31'     
+                self.__gen_dates()
+                self._cur_year_dict_index=0
+            temp_cur_et=spiceypy.utc2et(temp_cur_utc)
+            
+            if self._delay_counter==0:
+                for planet in self._master_planet_dict.keys():
+                    
+                    self.__focus(planet,temp_cur_et)
+                    if planet!='sun':
+                        temp_obs_planet_id=self._master_planet_dict[planet]['obs_planet_id']
+                        if temp_obs_planet_id!=10:
+                            self._master_planet_dict[planet]['entity'].position= self.__gen_pos(self._master_planet_dict[planet]['planet_id'],temp_cur_et,temp_obs_planet_id) + self.__gen_pos(temp_obs_planet_id,temp_cur_et,10)
+                        else:
+                            self._master_planet_dict[planet]['entity'].position=self.__gen_pos(self._master_planet_dict[planet]['planet_id'],temp_cur_et,temp_obs_planet_id)           
+                    self._master_planet_dict[planet]['sibling_entity'].position=self._master_planet_dict[planet]['entity'].position
+                    self._master_planet_dict[planet]['text_tag_entity'].world_position=self._master_planet_dict[planet]['sibling_entity'].position
+                    self._master_planet_dict[planet]['text_tag_entity'].world_scale=abs(camera.z) * 0.50
+                    self._master_planet_dict[planet]['entity'].rotate(Vec3(0,
+                                                                        self._master_planet_dict[planet]['axial_rotation']*self._axial_rotation_multiplier[self._date_frequency],
+                                                                        0
+                                                                        )
+                                                                    )       
+                    if planet!='sun':
+                        if self._delay_counter==0 :
+                            self._master_planet_dict[planet]['trail_deque'].append(self._master_planet_dict[planet]['entity'].position)
+                        
+                        if self._toggle_trail :
+                            destroy(self._master_planet_dict[planet]['curve_renderer'])
+                        
+                            try:
+                                self._master_planet_dict[planet]['curve_renderer']= Entity(model=Mesh(
+                                                                                                    vertices=self._master_planet_dict[planet]['trail_deque'],
+                                                                                                    mode=self._curve_mode,
+                                                                                                    thickness=self._thick
+                                                                                                    ),
+                                                                                        color=self._master_planet_dict[planet]['trail_color'] 
+                                                                                        )  
+                            except:
+                                pass
 
 app=Ursina()
-
 window.color=color.black
-year_text='<red>YEAR</red>\n<green>{}</green><red>\nZoom</red>\n<green>{}</green>'
-cur_year_txt = Text(scale=1,position=(-0.85,0.45,0))
-sensi=0.005
-
-
-sun=Entity(name='Sun', rotation_x =-90, rotation_z=7.25, model='sphere',scale=km2au(696340*2),texture=r"..\Assets\8k_sun.png",collider='box')
-sun.position=Vec3(0,0,0)
-
-mercury=Entity(name='Mercury', rotation_x =-90,rotation_z=0.03, model='sphere',texture=r"..\Assets\mercury.png", scale = km2au(2439*2),collider='box')
-venus=Entity(name='Venus', rotation_x =-90, rotation_z=2.64, model='sphere', scale = km2au(6052*2), texture=r"..\Assets\venus_atmosphere.png", collider='box')
-earth=Entity(name='Earth', rotation_z=23.44, rotation_x =-90, model='sphere', scale = km2au(6387*2),texture=r"..\Assets\earth_daymap.png", collider='box')
-moon=Entity(name='Moon', rotation_x =-90, rotation_z=6.68, model='sphere', scale = km2au(1738*2), texture=r"..\Assets\moon.png" ,collider='box')
-mars=Entity(name=' Mars', rotation_x =-90, rotation_z=25.19, model='sphere', scale = km2au(3393*2),collider='box', texture="..\Assets\mars.png")
-phobos=Entity(name=' Phobos', rotation_x =-90, rotation_z=0, model='sphere', scale = km2au(11.2*2),collider='box', texture="..\Assets\phobos.png")
-deimos=Entity(name=' Deimos', rotation_x =-90, rotation_z=2, model='sphere', scale = km2au(6.3*2),collider='box', texture="..\Assets\deimos.png")
-jupiter=Entity(name='Jupiter',rotation_x =-90, rotation_z=3.13, model='sphere', scale = km2au(69911*2), texture="..\Assets\jupiter.png", collider='box')
-ganymede=Entity( name='Ganymede',rotation_x =-90, rotation_z=0.33, model='sphere', scale = km2au(2634.1*2), texture="..\Assets\ganymede.jpg", collider='box')   #change
-callisto=Entity( name='Callisto',model='sphere', rotation_x =-90, rotation_z=0, scale = km2au(2410.3*2), texture="..\Assets\callisto.png", collider='box')   #change
-io=Entity( name='Io',rotation_x =-90, rotation_z=0, model='sphere', scale = km2au(1821.6*2), texture="..\Assets\io.png", collider='box')                     #change
-europa=Entity( name='Europa',rotation_x =-90, rotation_z=0.1, model='sphere', scale = km2au(1560.8*2), texture="..\Assets\europa.png", collider='box')         #change
-saturn=Entity(name='Saturn', rotation_x =-90, rotation_z=26.73, model='sphere', scale = km2au(60268*2), texture="..\Assets\saturn.png", collider='box')
-titan=Entity( name='Titan',rotation_x =-90, rotation_z=27, model='sphere', scale = km2au(2574.8*2), texture="..\Assets\\titan.png", collider='box')           #change
-rhea=Entity( name='Rhea',rotation_x =-90, rotation_z=0, model='sphere', scale = km2au(763.8*2), texture="..\Assets\\rhea.png", collider='box')               #change
-uranus=Entity(name='Uranus',rotation_x =-90, rotation_z=82.23, model='sphere', scale = km2au(25559*2), texture=r"..\Assets\uranus.png", collider='box')
-titania=Entity( name='Titania',rotation_x =-90, rotation_z=0, model='sphere', scale = km2au(789*2), texture="..\Assets\\titania.png", collider='box')        #change
-neptune=Entity(name='Neptune',rotation_x =-90, rotation_z=28.32, model='sphere', scale = km2au(24764*2), texture=r"..\Assets\neptune.png", collider='box')
-triton=Entity(name='Triton', rotation_x =-90, rotation_z=30, model='sphere', scale = km2au(1355*2), texture=r"..\Assets\triton.png", collider='box')          #change
-pluto=Entity(name='Pluto', rotation_x =-90, rotation_z=120, model='sphere', scale = km2au(1140*2), texture="..\Assets\pluto.png", collider='box')
-charon=Entity(name='Charon',rotation_x =-90, rotation_z=119.6, model='sphere', scale = km2au(606*2), texture="..\Assets\charon.png", collider='box')            #change
-ceres=Entity(name='Ceres', rotation_x =-90, rotation_z=4, model='sphere', scale = km2au(476*2), texture="..\Assets\ceres_fictional.png", collider='box')     #change
-
-sun_sib=Entity(name='Sun',visible=True, scale = km2au(696340*2))
-mercury_sib=Entity(name='Mercury',visible=True, scale = km2au(2439*2))
-venus_sib=Entity(name='Venus',visible=True, scale = km2au(6052*2))
-earth_sib=Entity(name='Earth',visible=True, scale = km2au(6387*2))
-mars_sib=Entity(name='Mars',visible=True, scale = km2au(3393*2))
-jupiter_sib=Entity(name='Jupiter',visible=True, scale = km2au(69911*2))
-saturn_sib=Entity(name='Saturn',visible=True, scale = km2au(60268*2))
-uranus_sib=Entity(name='Uranus',visible=True, scale = km2au(25559*2))
-neptune_sib=Entity(name='Neptune',visible=True, scale = km2au(24764*2))
-pluto_sib=Entity(name='Pluton',visible=True, scale = km2au(1140*2))
-ceres_sib=Entity(name='Ceres',visible=True, scale = km2au(476*2))
-moon_sib=Entity(name='Moon',visible=True, scale = km2au(1738*2))
-phobos_sib=Entity(name='Phobos',visible=True, scale = km2au(11.2*2))
-deimos_sib=Entity(name='Deimos',visible=True, scale = km2au(6.3*2))
-ganymede_sib=Entity(name='Ganymede',visible=True, scale = km2au(2634.1*2))
-callisto_sib=Entity(name='Callisto',visible=True, scale = km2au(2410.3*2))
-io_sib=Entity(name='Io',visible=True, scale = km2au(1821.6*2))
-europa_sib=Entity(name='Europa',visible=True, scale = km2au(1560.8*2))
-titan_sib=Entity(name='Titan',visible=True, scale = km2au(2574.8*2))
-rhea_sib=Entity(name='Rhea',visible=True, scale = km2au(763.8*2))
-titania_sib=Entity(name='Titania',visible=True, scale = km2au(789*2))
-triton_sib=Entity(name='Triton',visible=True, scale = km2au(1355*2))
-charon_sib=Entity(name='Charon',visible=True, scale = km2au(606*2))
-
-
-sun_text=Text(parent=sun_sib,text='Sun', scale=camera.z*0.4)
-mercury_text=Text(parent=mercury_sib , text='Mercury', scale=camera.z*0.4)
-venus_text=Text(parent=venus_sib , text='Venus', scale=camera.z*0.4)
-earth_text=Text(parent=earth_sib , text='Earth', scale=camera.z*0.4)
-moon_text=Text(parent=moon_sib , text='Moon', scale=camera.z*0.4)
-mars_text=Text(parent=mars_sib , text='Mars', scale=camera.z*0.4)
-phobos_text=Text(parent=phobos_sib , text='Phobos', scale=camera.z*0.4)
-deimos_text=Text(parent=deimos_sib , text='Deimos', scale=camera.z*0.4)
-jupiter_text=Text(parent=jupiter_sib , text='Jupiter', scale=camera.z*0.4)
-ganymede_text=Text(parent=ganymede_sib , text='Ganymede', scale=camera.z*0.4)   #change
-callisto_text=Text(parent=callisto_sib , text='Callisto', scale=camera.z*0.4)   #change
-io_text=Text(parent=io_sib , text='Io', scale=camera.z*0.4)                     #change
-europa_text=Text(parent=europa_sib , text='Europa', scale=camera.z*0.4)         #change
-saturn_text=Text(parent=saturn_sib , text='Saturn', scale=camera.z*0.4)
-titan_text=Text(parent=titan_sib , text='Titan', scale=camera.z*0.4)            #change
-rhea_text=Text(parent=rhea_sib , text='Rhea', scale=camera.z*0.4)               #change
-uranus_text=Text(parent=uranus_sib , text='Uranus', scale=camera.z*0.4)
-titania_text=Text(parent=titania_sib , text='Titania', scale=camera.z*0.4)      #change
-neptune_text=Text(parent=neptune_sib , text='Neptune', scale=camera.z*0.4)
-triton_text=Text(parent=triton_sib , text='Triton', scale=camera.z*0.4)         #change
-pluto_text=Text(parent=pluto_sib , text='Pluto', scale=camera.z*0.4)
-charon_text=Text(parent=charon_sib , text='Charon', scale=camera.z*0.4)         #change
-ceres_text=Text(parent=ceres_sib , text='Ceres', scale=camera.z*0.4)            #change
-
-
-trail_mercury=deque([],maxlen=100)
-trail_venus=deque([],maxlen=100)
-trail_earth=deque([],maxlen=100)
-trail_moon=deque([],maxlen=100)
-trail_mars=deque([],maxlen=100)
-trail_phobos=deque([],maxlen=100)
-trail_deimos=deque([],maxlen=100)
-trail_jupiter=deque([],maxlen=100)
-trail_ganymede=deque([],maxlen=100) #change
-trail_callisto=deque([],maxlen=100) #change
-trail_io=deque([],maxlen=100)       #change
-trail_europa=deque([],maxlen=100)   #change
-trail_saturn=deque([],maxlen=100)
-trail_titan=deque([],maxlen=100)    #change
-trail_rhea=deque([],maxlen=100)     #change
-trail_uranus=deque([],maxlen=100)
-trail_titania=deque([],maxlen=100)  #change
-trail_neptune=deque([],maxlen=100)
-trail_triton=deque([],maxlen=100)   #change
-trail_pluto=deque([],maxlen=100)
-trail_charon=deque([],maxlen=100)
-trail_ceres=deque([],maxlen=100)    #change
-
-
-curve_renderer_mercury=Entity()
-curve_renderer_venus=Entity()
-curve_renderer_earth=Entity()
-curve_renderer_moon=Entity()
-curve_renderer_mars=Entity()
-curve_renderer_phobos=Entity()
-curve_renderer_deimos=Entity()
-curve_renderer_jupiter=Entity()
-curve_renderer_ganymede=Entity()    #change
-curve_renderer_callisto=Entity()    #change
-curve_renderer_io=Entity()          #change
-curve_renderer_europa=Entity()      #change
-curve_renderer_saturn=Entity()
-curve_renderer_titan=Entity()       #change
-curve_renderer_rhea=Entity()        #change
-curve_renderer_uranus=Entity()
-curve_renderer_titania=Entity()     #change
-curve_renderer_neptune=Entity()
-curve_renderer_triton=Entity()      #change
-curve_renderer_pluto=Entity()
-curve_renderer_charon=Entity()      #change
-curve_renderer_ceres=Entity()       #change
-
-
-zoom_on=True
-def goto():
-    global follow_earth,zoom_field,camera
-    x=zoom_field.text
-    print(x)
-    if x=='earth':  
-        follow_earth=True
-
-planets_info={"sun":{'entity':sun_sib,'planet_id': 10, 'text_tag_entity':sun_text ,'follow': False },
-              "mercury":{'entity':mercury_sib,'planet_id': 1, 'text_tag_entity':mercury_text ,'follow': False },
-              "venus":{'entity':venus_sib,'planet_id': 2, 'text_tag_entity':venus_text ,'follow': False },
-              "earth":{'entity':earth_sib,'planet_id': 399, 'text_tag_entity':earth_text ,'follow': False },
-              "moon":{'entity':moon_sib,'planet_id': 301, 'text_tag_entity':moon_text ,'follow': False },
-              "phobos":{'entity':phobos_sib,'planet_id': 401, 'text_tag_entity':phobos_text ,'follow': False },
-              "deimos":{'entity':deimos_sib,'planet_id': 402, 'text_tag_entity':deimos_text ,'follow': False },
-              "mars":{'entity':mars_sib,'planet_id': 4, 'text_tag_entity':mars_text ,'follow': False },
-              "jupiter":{'entity':jupiter_sib,'planet_id': 5, 'text_tag_entity':jupiter_text ,'follow': False },
-              "ganymede":{'entity':ganymede_sib,'planet_id': 503, 'text_tag_entity':ganymede_text ,'follow': False },   #change
-              "callisto":{'entity':callisto_sib,'planet_id': 504, 'text_tag_entity':callisto_text ,'follow': False },   #change
-              "io":{'entity':io_sib,'planet_id': 501, 'text_tag_entity':io_text ,'follow': False },                     #change
-              "europa":{'entity':europa_sib,'planet_id': 502, 'text_tag_entity':europa_text ,'follow': False },         #change
-              "saturn":{'entity':saturn_sib,'planet_id': 6, 'text_tag_entity':saturn_text ,'follow': False },
-              "titan":{'entity':titan_sib,'planet_id': 606, 'text_tag_entity':titan_text ,'follow': False },            #change
-              "rhea":{'entity':rhea_sib,'planet_id': 605, 'text_tag_entity':rhea_text ,'follow': False },               #change
-              "uranus":{'entity':uranus_sib,'planet_id': 7, 'text_tag_entity':uranus_text ,'follow': False },
-              "titania":{'entity':titania_sib,'planet_id': 703, 'text_tag_entity':titania_text ,'follow': False },      #change
-              "neptune":{'entity':neptune_sib,'planet_id': 8, 'text_tag_entity':neptune_text ,'follow': False },
-              "triton":{'entity':triton_sib,'planet_id': 801, 'text_tag_entity':triton_text ,'follow': False },         #change
-              "pluto":{'entity':pluto_sib,'planet_id': 9, 'text_tag_entity':pluto_text ,'follow': False },
-              "charon":{'entity':charon_sib,'planet_id': 901, 'text_tag_entity':charon_text ,'follow': False },         #change
-              "ceres":{'entity':ceres_sib,'planet_id': 2000001, 'text_tag_entity':ceres_text ,'follow': False }         #change
-              }
-
-def set_all_follow_false():
-    global planets_info
-    for i in planets_info.keys():
-        planets_info[i]['follow']=False
-        #planets_info[i]['text_tag_entity'].visible=False
-
-current_focus='sun'
-toggle_free=False
-
-camera.parent=scene
-default_zoom=-20
-camera.z=default_zoom
-#camera.collider=BoxCollider(camera,center=Vec3(0,0,5),size=(5,5,20))
-#camera.collider.visible=False
-max_far_zoom=300000
-camera.clip_plane_far_setter(max_far_zoom*2)            
-
-drop_down_text='Focus on: {}'
-
-def set_follow(planet_name: str):
-    global planets_info,current_focus,toggle_free
-    set_all_follow_false()
-    if planet_name=='free':
-        toggle_free=True
-        camera.parent=scene
-        camera.position=Vec3(0,0,-20)
-        current_focus=None
-        for i in planets_info.keys():
-            planets_info[i]['text_tag_entity'].visible=True
-    else:
-        toggle_free=False
-        planets_info[planet_name]['follow']=True
-        current_focus=planet_name    
-
-
-
-button_list=[DropdownMenuButton('Free rotation',on_click=Func(set_follow,'free')),
-             DropdownMenuButton('Sun',on_click=Func(set_follow,'sun')),
-             DropdownMenuButton('Mercury',on_click=Func(set_follow,'mercury')),
-             DropdownMenuButton('Venus',on_click=Func(set_follow,'venus')),
-             DropdownMenu(text='Earth and Moon',buttons=[DropdownMenuButton('Earth',on_click=Func(set_follow,'earth')),
-                                                DropdownMenuButton('Moon',on_click=Func(set_follow,'moon'))],
-                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
-             DropdownMenu(text='Mars and moons',buttons=[DropdownMenuButton('Mars',on_click=Func(set_follow,'mars')),
-                                                DropdownMenuButton('Phobos',on_click=Func(set_follow,'phobos')),
-                                                DropdownMenuButton('Deimos',on_click=Func(set_follow,'deimos'))],
-                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
-             DropdownMenu(text='Jupiter and moons',buttons=[DropdownMenuButton('Jupiter',on_click=Func(set_follow,'jupiter')),
-                                                DropdownMenuButton('Ganymede',on_click=Func(set_follow,'ganymede')),
-                                                DropdownMenuButton('Callisto',on_click=Func(set_follow,'callisto')),
-                                                DropdownMenuButton('Io',on_click=Func(set_follow,'io')),
-                                                DropdownMenuButton('Europa',on_click=Func(set_follow,'europa'))],       #change
-                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
-             DropdownMenu(text='Saturn and moons',buttons=[DropdownMenuButton('Saturn',on_click=Func(set_follow,'saturn')),
-                                                DropdownMenuButton('Titan',on_click=Func(set_follow,'titan')),
-                                                DropdownMenuButton('Rhea',on_click=Func(set_follow,'rhea'))],           #change
-                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
-             DropdownMenu(text='Uranus and Titania',buttons=[DropdownMenuButton('Uranus',on_click=Func(set_follow,'uranus')),
-                                                DropdownMenuButton('Titania',on_click=Func(set_follow,'titania')),],    #change
-                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
-             DropdownMenu(text='Neptune and Triton',buttons=[DropdownMenuButton('Neptune',on_click=Func(set_follow,'neptune')),
-                                                DropdownMenuButton('Triton',on_click=Func(set_follow,'triton'))],      #change
-                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
-             DropdownMenu(text='Pluto and Charon',buttons=[DropdownMenuButton('Pluto',on_click=Func(set_follow,'pluto')),
-                                                DropdownMenuButton('Charon',on_click=Func(set_follow,'charon'))],      #change
-                                                color=color.white,text_color=color.red,highlight_color=color.yellow),
-             DropdownMenuButton('Ceres',on_click=Func(set_follow,'ceres'))                          #change
-             ]
-
-
-
-drop_menu=DropdownMenu(x=-.60,y=0.45,text=drop_down_text.format(current_focus), 
-                       buttons=button_list,color=color.white,text_color=color.red,highlight_color=color.green,
-                       scale=(0.3,0.03,0.0))
-
-
-def scale_sensitivity():
-    global sensi
-    sensi = x.value/1000
-
-wp = WindowPanel(
-    title='Custom Window',
-    content=(
-        Text('adjust sensitivity'),
-        x := Slider(0, 20, default=5, height=Text.size, y=-0.4, x=-0.8, step=1, dynamic= True, on_value_changed=scale_sensitivity, vertical=False, bar_color = color.yellow)
-        ),
-    popup=True
-    )
-wp.enabled = False
-x.knob.ignore_paused= True
-x.ignore_paused=True
-
-pause_handler = Entity(ignore_paused=True)
-def pause_handler_input(key):
-    global wp
-    if key == 'escape':
-
-        application.paused = not application.paused # Pause/unpause the game.
-        wp.enabled = not wp.enabled
-
-pause_handler.input = pause_handler_input # Assign the input function to the pause handler.
-
-settings_menu=DropdownMenu(x=.30,y=0.40,text='settings', 
-                       buttons=[DropdownMenuButton('Settings',on_click=Func(wp.enable))],color=color.white,text_color=color.red,highlight_color=color.green,
-                       scale=(0.3,0.03,0.0))
-
-mouse_enabled_movement=False
-
-# slider = Slider(0, 20, default=5, height=Text.size, y=-0.4, x=-0.8, step=1, dynamic= True, on_value_changed=scale_sensitivity, vertical=False, bar_color = color.yellow)
-# slider.label = Text(parent=slider, y=-0.03, text="adjust sensitivity")
-
-#camera.position=Vec3(0,10,-100)
-#camera.look_at(sun)
-def magnitude(vector):
-    return numpy.linalg.norm(vector)
-
-def focus(planet_name: str, cur_et):
-    global planets_info,default_zoom,mouse_enabled_movement
-    if planet_name==None:
-            mouse_enabled_movement=False
-            camera.parent=scene
-            #camera.collider=BoxCollider(camera,center=Vec3(0,0,0),size=(10,10,10))
-            
-            camera.look_at(sun)
-            camera.position=(0,10,default_zoom)
-            camera.look_at(sun)
-            planets_info['sun']['follow']=False
-        
-    elif planets_info[planet_name]['follow']:
-        mouse_enabled_movement=False
-        camera.position=Vec3(0,0,default_zoom)
-        camera.rotation=Vec3(0,0,0)
-        camera.parent=planets_info[planet_name]['entity']
-        
-        #camera.set_position=planets_info[planet_name]['entity'].position.up*2
-        #camera.collider=BoxCollider(camera,center=Vec3(0,0,10),size=(3,3,3))
-        #camera.collider.visible=True
-        #camera.z=default_zoom
-        camera.position=Vec3(0,0,0)
-        camera.z=default_zoom
-        planets_info[planet_name]['follow']=False
-        camera._always_on_top=True
-        
-    #focus_camera.rotate=Vec3(0,0,0)
-        
-
-            
-mouse_drag=False
-mouse_drag_initial=None
-
+solarsystem=SolarSystem()
+solarsystem.load_widgets()
 def input(key):
-    global sun,toggle_trail,mouse_enabled_movement,mouse_drag,mouse_drag_initial, sensi,collider_ray
-    if key=='scroll up':
-        if  collider_ray.entity==None:
-            camera.world_position +=camera.forward*abs(camera.z)*sensi
-    
-    elif key=='scroll down':
-        camera.world_position +=camera.back*abs(camera.z)*sensi
-    
-    elif key=='left mouse down' and not mouse_enabled_movement:
-        mouse_drag=True
-        if mouse_drag_initial==None:
-            mouse_drag_initial=mouse.position
-    
-    elif key=='left mouse up' and not mouse_enabled_movement:
-        mouse_drag=False
-        mouse_drag_initial=None
-    #button gived to simulate this
-    #elif key=='m':
-    #    mouse_enabled_movement=not(mouse_enabled_movement)  
-    #
-    elif key == 'm':
-
-        mouse_enabled_movement = not mouse_enabled_movement
-    elif key=='t':
-        if toggle_trail==True:
-            global curve_renderer_mercury,curve_renderer_venus,curve_renderer_earth,curve_renderer_moon,curve_renderer_deimos,curve_renderer_ceres
-            global curve_renderer_mars,curve_renderer_jupiter,curve_renderer_ganymede,curve_renderer_callisto,curve_renderer_saturn #change
-            global curve_renderer_uranus,curve_renderer_neptune,curve_renderer_pluto,curve_renderer_io,curve_renderer_europa ,curve_renderer_charon      #change
-            global curve_renderer_titan,curve_renderer_rhea,curve_renderer_titania,curve_renderer_triton,curve_renderer_phobos      #change
-            try:
-                destroy(curve_renderer_mercury)
-                destroy(curve_renderer_venus)
-                destroy(curve_renderer_earth)
-                destroy(curve_renderer_moon)
-                destroy(curve_renderer_mars)
-                destroy(curve_renderer_phobos)
-                destroy(curve_renderer_deimos)
-                destroy(curve_renderer_jupiter)
-                destroy(curve_renderer_ganymede)    #change
-                destroy(curve_renderer_callisto)    #change
-                destroy(curve_renderer_io)          #change
-                destroy(curve_renderer_europa)      #change
-                destroy(curve_renderer_saturn)
-                destroy(curve_renderer_titan)       #change
-                destroy(curve_renderer_rhea)        #change
-                destroy(curve_renderer_uranus)
-                destroy(curve_renderer_titania)     #change
-                destroy(curve_renderer_neptune)
-                destroy(curve_renderer_triton)      #change
-                destroy(curve_renderer_pluto)
-                destroy(curve_renderer_charon)      #change
-                destroy(curve_renderer_ceres)       #change
-            except:
-                pass    
-        toggle_trail=not(toggle_trail)            
-
-collider_ray = raycast(origin= camera.position+camera.forward*5,ignore=(camera,), direction= camera.forward, distance= 10, debug= True)         
-
-def camera_control():
-    
-    global toggle_free,current_focus,planets_info,mouse_enabled_movement,mouse_drag,mouse_drag_initial,collider_ray
-    
-    
-
-    if mouse_drag and mouse_drag_initial!=None:
-        camera.x-=abs(camera.z) * (mouse.x - mouse_drag_initial[0]) * time.dt
-        camera.y-=abs(camera.z) * (mouse.y - mouse_drag_initial[1]) * time.dt
-        
-    if collider_ray.entity==None:
-        camera.position +=camera.forward *100 * held_keys['w'] * time.dt * abs(camera.z) * 0.005
-    camera.position +=camera.back * 100 * held_keys['s'] * time.dt * abs(camera.z) * 0.005
-
-    if not camera.intersects().hit: 
-        camera.position +=camera.forward *100 * held_keys['w'] * time.dt
-    camera.position +=camera.back * 100 * held_keys['s'] * time.dt
-    
-
-    if toggle_free:
-
-        camera.position +=camera.left * 100 * held_keys['a'] * time.dt
-        camera.position +=camera.right * 100 * held_keys['d'] * time.dt
-        camera.position +=camera.up * 100 * held_keys['z'] * time.dt
-        camera.position +=camera.down * 100 * held_keys['x'] * time.dt
-        
-        camera.rotation_x-=10 *held_keys['up arrow'] * time.dt
-        camera.rotation_x+=10 *held_keys['down arrow'] * time.dt
-        camera.rotation_y-=10 *held_keys['left arrow'] * time.dt
-        camera.rotation_y+=10 *held_keys['right arrow'] * time.dt
-        camera.rotation_z+=10 *held_keys['c'] * time.dt
-        camera.rotation_z-=10 *held_keys['v'] * time.dt
-
-
-        if mouse_enabled_movement:
-            
-            mouse_drag=False
-            mouse_drag_initial=None
-            camera.x+=abs(camera.z) * mouse.x * time.dt
-            camera.y+=abs(camera.z) * mouse.y * time.dt
-        
-
-        
-delay_counter=0
-                
+    solarsystem.custom_input(key)
 def update():
-    
-    global max_far_zoom,sensi
-    camera_control()
-    if abs(camera.z)>max_far_zoom:
-        camera.z=-max_far_zoom
-    sensi = x.value/1000
-    global follow_earth,zoom_on,delay_counter
-    global last_time,cur_year_txt,year_text,curve_renderer,start_date,end_date,i,year,dates,trail_titan,trail_triton,trail_titania,trail_rhea   #change
-    global trail_mercury,trail_venus,trail_earth,trail_moon,trail_mars,trail_jupiter,trail_saturn,trail_uranus,trail_neptune,trail_europa       #change
-    global curve_renderer_mercury,curve_renderer_venus,curve_renderer_earth,curve_renderer_moon,trail_ganymede,trail_callisto,trail_io          #change
-    global curve_renderer_mars,curve_renderer_jupiter,curve_renderer_ganymede,curve_renderer_callisto,curve_renderer_saturn,curve_renderer_charon                     #change
-    global curve_renderer_uranus,curve_renderer_neptune,curve_renderer_pluto,curve_renderer_io,curve_renderer_europa,curve_renderer_ceres       #change
-    global curve_renderer_titan,curve_renderer_rhea,curve_renderer_titania,curve_renderer_triton,curve_renderer_phobos,curve_renderer_deimos    #change
-
-    global sun_text,mercury_text,venus_text,earth_text,moon_text,rhea_text,deimos_text,charon_text      #change
-    global mars_text,jupiter_text,ganymede_text,saturn_text,callisto_text,triton_text,ceres_text       #change
-    global uranus_text,neptune_text,pluto_text,io_text,europa_text,titan_text,phobos_text   #change
-
-    global planets_info,drop_menu,mouse_button,mouse_enabled_movement
-    global collider_ray
-    collider_ray = raycast(origin= camera.world_position,ignore=(camera,), direction= camera.forward, distance= 0.3, debug= True)
-    print(mouse.hovered_entity)
-    
-    drop_menu.text=drop_down_text.format(current_focus)
-    
-    #mouse_button.text=mouse_text.format(mouse_enabled_movement)
-    
-
-    cur_year_txt.text = year_text.format(year,camera.z) 
-
-    delay_counter+=time.dt
-
-    #print(camera.world_position)
-    
-    # if mouse.collision!=None:
-    #     if mouse.collision.entity=='mouse_button':
-    #         mouse_button._enabled=True
-    # else:
-    #     mouse_button._enabled=False    
-    cur_utc=str(dates[i])
-    cur_utc=cur_utc.replace(" ",'T')
-    if delay_counter>=1000:
-        i=(i+1)
-        delay_counter=0
-    if i==len(dates):
-        year+=1
-        if year>=2099:  #change
-            year=1900     #change
-        gen_dates(start_date.format(year),end_date.format(year))
-        i=0
-        print(year)
-    cur_et=spiceypy.utc2et(cur_utc)
-
-
-    #cur_view_info = raycast(origin= camera.position,ignore=(focus_cam_entity,), direction= camera.forward, distance= 1000, debug= True)
-    #print(cur_view_info.entity)
-    
-    focus('sun',cur_et)
-    sun_sib.position=sun.position
-    sun_text.world_position=sun_sib.position
-    sun_text.world_scale=abs(camera.z)*0.50
-    sun.rotate(Vec3(0,-0.00015,0))
-
-    focus('mercury',cur_et)   
-    mercury.position=gen_pos(1,cur_et,10)           #change
-    mercury_sib.position=mercury.position
-    mercury_text.world_position=mercury_sib.position
-    mercury_text.world_scale=abs(camera.z)*0.40
-    mercury.rotate(Vec3(0,-0.00007,0))
-
-    focus('venus',cur_et)   
-    venus.position=gen_pos(2,cur_et,10)             #change
-    venus_sib.position = venus.position
-    venus_text.world_position=venus_sib.position
-    venus_text.world_scale=abs(camera.z)*0.40
-    venus.rotate(Vec3(0,-0.00104,0))
-
-    focus('earth',cur_et)
-    earth.position=gen_pos(399,cur_et,10)           #change
-    earth_sib.position=earth.position
-    earth_text.world_position=earth_sib.position
-    earth_text.world_scale=abs(camera.z)*0.40
-    earth.rotate(Vec3(0,-0.00417,0))
-    
-    focus('moon',cur_et)   
-    moon.position=gen_pos(301,cur_et,10)            #change
-    moon_sib.position = moon.position
-    moon_text.world_position=moon_sib.position
-    moon_text.world_scale=abs(camera.z)*0.15
-    moon.rotate(Vec3(0,-0.00015,0))
-
-    focus('mars',cur_et)  
-    mars.position=gen_pos(4,cur_et,10)              #change
-    mars_sib.position = mars.position
-    mars_text.world_position=mars_sib.position
-    mars_text.world_scale=abs(camera.z)*0.40
-    mars.rotate(Vec3(0,-0.00401,0))
-        #add_func
-    focus('phobos',cur_et)   
-    phobos.position= gen_pos(401,cur_et,4) + gen_pos(4,cur_et,10)
-    phobos_sib.position = phobos.position
-    phobos_text.world_position=phobos_sib.position
-    phobos_text.world_scale=abs(camera.z)*0.15
-    phobos.rotate(Vec3(0,-0.01307,0))
-        #add_func
-    focus('deimos',cur_et)   
-    deimos.position= gen_pos(402,cur_et,4) + gen_pos(4,cur_et,10)
-    deimos_sib.position = deimos.position
-    deimos_text.world_position=deimos_sib.position
-    deimos_text.world_scale=abs(camera.z)*0.15
-    deimos.rotate(Vec3(0,-0.00330,0))
-    
-    focus('jupiter',cur_et)   
-    jupiter.position=gen_pos(5,cur_et,10)           #change
-    jupiter_sib.position = jupiter.position
-    jupiter_text.world_position=jupiter_sib.position
-    jupiter_text.world_scale=abs(camera.z)*0.40
-    jupiter.rotate(Vec3(0,-0.01001,0))
-        #add_func
-    focus('ganymede',cur_et)   
-    ganymede.position= gen_pos(503,cur_et,5) + gen_pos(5,cur_et,10)
-    ganymede_sib.position = ganymede.position
-    ganymede_text.world_position=ganymede_sib.position
-    ganymede_text.world_scale=abs(camera.z)*0.15
-    ganymede.rotate(Vec3(0,-0.00058,0))
-        #add_func
-    focus('callisto',cur_et)   
-    callisto.position= gen_pos(504,cur_et,5) + gen_pos(5,cur_et,10)
-    callisto_sib.position = callisto.position
-    callisto_text.world_position=callisto_sib.position
-    callisto_text.world_scale=abs(camera.z)*0.15
-    callisto.rotate(Vec3(0,-0.00025,0))
-        #add_func
-    focus('io',cur_et)   
-    io.position= gen_pos(501,cur_et,5) + gen_pos(5,cur_et,10)
-    io_sib.position = io.position
-    io_text.world_position=io_sib.position
-    io_text.world_scale=abs(camera.z)*0.15
-    io.rotate(Vec3(0,-0.00236,0))
-        #add_func
-    focus('europa',cur_et)   
-    europa.position= gen_pos(502,cur_et,5) + gen_pos(5,cur_et,10)
-    europa_sib.position = europa.position
-    europa_text.world_position=europa_sib.position
-    europa_text.world_scale=abs(camera.z)*0.15
-    europa.rotate(Vec3(0,-0.00118,0))
-
-    focus('saturn',cur_et)   
-    saturn.position=gen_pos(6,cur_et,10)            #change
-    saturn_sib.position = saturn.position
-    saturn_text.world_position=saturn_sib.position
-    saturn_text.world_scale=abs(camera.z)*0.40
-    saturn.rotate(Vec3(0,-0.00946,0))
-        #add_func
-    focus('titan',cur_et)   
-    titan.position= gen_pos(606,cur_et,6) + gen_pos(6,cur_et,10)
-    titan_sib.position = titan.position
-    titan_text.world_position=titan_sib.position
-    titan_text.world_scale=abs(camera.z)*0.15
-    titan.rotate(Vec3(0,-0.00026,0))
-        #add_func
-    focus('rhea',cur_et)   
-    rhea.position= gen_pos(605,cur_et,6) + gen_pos(6,cur_et,10)
-    rhea_sib.position = rhea.position
-    rhea_text.world_position=rhea_sib.position
-    rhea_text.world_scale=abs(camera.z)*0.15
-    rhea.rotate(Vec3(0,-0.00092,0))
-    
-    focus('uranus',cur_et)   
-    uranus.position=gen_pos(7,cur_et,10)            #change
-    uranus_sib.position = uranus.position
-    uranus_text.world_position=uranus_sib.position
-    uranus_text.world_scale=abs(camera.z)*0.40
-    uranus.rotate(Vec3(0,-0.00580,0))
-        #add_func
-    focus('titania',cur_et)   
-    titania.position= gen_pos(703,cur_et,7) + gen_pos(7,cur_et,10)
-    titania_sib.position= titania.position
-    titania_text.world_position=titania_sib.position
-    titania_text.world_scale=abs(camera.z)*0.15
-    titania.rotate(Vec3(0,-0.00048,0))
-    
-    focus('neptune',cur_et)   
-    neptune.position=gen_pos(8,cur_et,10)           #change
-    neptune_sib.position=neptune.position
-    neptune_text.world_position=neptune_sib.position
-    neptune_text.world_scale=abs(camera.z)*0.40
-    neptune.rotate(Vec3(0,-0.00621,0))
-        #add_func
-    focus('triton',cur_et)   
-    triton.position= gen_pos(801,cur_et,8) + gen_pos(8,cur_et,10)
-    triton_sib.position = triton.position
-    triton_text.world_position=triton_sib.position
-    triton_text.world_scale=abs(camera.z)*0.15
-    triton.rotate(Vec3(0,-0.00071,0))
-
-    focus('pluto',cur_et)   
-    pluto.position=gen_pos(9,cur_et,10)             #change
-    pluto_sib.position = pluto.position
-    pluto_text.world_position=pluto_sib.position
-    pluto_text.world_scale=abs(camera.z)*0.30
-    pluto.rotate(Vec3(0,-0.00065,0))
-        #add_func
-    focus('charon',cur_et)   
-    charon.position= gen_pos(901,cur_et,9) + gen_pos(9,cur_et,10)
-    charon_sib.position = charon.position
-    charon_text.world_position=charon_sib.position
-    charon_text.world_scale=abs(camera.z)*0.125
-    charon.rotate(Vec3(0,-0.00065,0))
-        #add
-    focus('ceres',cur_et)   
-    ceres.position=gen_pos(2000001,cur_et,10)  
-    ceres_sib.position = ceres.position           
-    ceres_text.world_position=ceres_sib.position
-    ceres_text.world_scale=abs(camera.z)*0.30
-    ceres.rotate(Vec3(0,-0.000002,0))
-
-
-    if delay_counter==0:
-        trail_mercury.append(mercury.position)
-        trail_venus.append(venus.position)
-        trail_earth.append(earth.position)
-        trail_moon.append(moon.position)
-        trail_mars.append(mars.position)
-        trail_phobos.append(phobos.position)
-        trail_deimos.append(deimos.position)
-        trail_jupiter.append(jupiter.position)
-        trail_ganymede.append(ganymede.position)    #change
-        trail_callisto.append(callisto.position)    #change
-        trail_io.append(io.position)                #change
-        trail_europa.append(europa.position)        #change
-        trail_saturn.append(saturn.position)
-        trail_titan.append(titan.position)          #change
-        trail_rhea.append(rhea.position)            #change
-        trail_uranus.append(uranus.position)
-        trail_titania.append(titania.position)      #change
-        trail_neptune.append(neptune.position)
-        trail_neptune.append(triton.position)       #change
-        trail_pluto.append(pluto.position)
-        trail_charon.append(charon.position)        #change
-        trail_ceres.append(ceres.position)          #change
-        
-    
-    if toggle_trail:
-        destroy(curve_renderer_mercury)
-        destroy(curve_renderer_venus)
-        destroy(curve_renderer_earth)
-        destroy(curve_renderer_moon)
-        destroy(curve_renderer_mars)
-        destroy(curve_renderer_phobos)
-        destroy(curve_renderer_deimos)
-        destroy(curve_renderer_jupiter)
-        destroy(curve_renderer_ganymede)    #change
-        destroy(curve_renderer_callisto)    #change
-        destroy(curve_renderer_io)          #change
-        destroy(curve_renderer_europa)      #change
-        destroy(curve_renderer_saturn)
-        destroy(curve_renderer_titan)       #change
-        destroy(curve_renderer_rhea)        #change
-        destroy(curve_renderer_uranus)
-        destroy(curve_renderer_titania)     #change
-        destroy(curve_renderer_neptune)
-        destroy(curve_renderer_triton)      #change
-        destroy(curve_renderer_pluto)
-        destroy(curve_renderer_charon)      #change
-        destroy(curve_renderer_ceres)       #change
-        
-        try:
-            thick=0.05
-            curve_mode='line'
-            curve_renderer_mercury= Entity(model=Mesh(vertices=trail_mercury, mode=curve_mode,thickness=thick),color=color.violet )
-            curve_renderer_venus= Entity(model=Mesh(vertices=trail_venus, mode=curve_mode,thickness=thick),color=color.cyan )
-
-            curve_renderer_earth= Entity(model=Mesh(vertices=trail_earth, mode=curve_mode,thickness=thick),color=color.blue )
-            curve_renderer_moon= Entity(model=Mesh(vertices=trail_moon, mode=curve_mode,thickness=thick),color=color.blue )
-            
-            curve_renderer_mars= Entity(model=Mesh(vertices=trail_mars, mode=curve_mode,thickness=thick),color=color.green )
-            curve_renderer_phobos= Entity(model=Mesh(vertices=trail_phobos, mode=curve_mode,thickness=thick),color=color.green )
-            curve_renderer_deimos= Entity(model=Mesh(vertices=trail_deimos, mode=curve_mode,thickness=thick),color=color.green )
-
-            curve_renderer_jupiter= Entity(model=Mesh(vertices=trail_jupiter, mode=curve_mode,thickness=thick),color=color.yellow )
-            curve_renderer_ganymede= Entity(model=Mesh(vertices=trail_ganymede, mode=curve_mode,thickness=thick),color=color.yellow )   #change
-            curve_renderer_callisto= Entity(model=Mesh(vertices=trail_callisto, mode=curve_mode,thickness=thick),color=color.yellow )   #change
-            curve_renderer_io= Entity(model=Mesh(vertices=trail_io, mode=curve_mode,thickness=thick),color=color.yellow )               #change
-            curve_renderer_europa= Entity(model=Mesh(vertices=trail_europa, mode=curve_mode,thickness=thick),color=color.yellow )       #change
-
-            curve_renderer_saturn= Entity(model=Mesh(vertices=trail_saturn, mode=curve_mode,thickness=thick),color=color.orange )
-            curve_renderer_titan= Entity(model=Mesh(vertices=trail_titan, mode=curve_mode,thickness=thick),color=color.orange )         #change
-            curve_renderer_rhea= Entity(model=Mesh(vertices=trail_rhea, mode=curve_mode,thickness=thick),color=color.orange )           #change
-
-            curve_renderer_uranus= Entity(model=Mesh(vertices=trail_uranus, mode=curve_mode,thickness=thick),color=color.red )
-            curve_renderer_titania= Entity(model=Mesh(vertices=trail_titania, mode=curve_mode,thickness=thick),color=color.red )        #change
-
-            curve_renderer_neptune= Entity(model=Mesh(vertices=trail_neptune, mode=curve_mode,thickness=thick),color=color.pink )
-            curve_renderer_triton= Entity(model=Mesh(vertices=trail_triton, mode=curve_mode,thickness=thick),color=color.pink )         #change
-
-            curve_renderer_pluto= Entity(model=Mesh(vertices=trail_pluto, mode=curve_mode,thickness=thick),color=color.white )
-            curve_renderer_charon= Entity(model=Mesh(vertices=trail_charon, mode=curve_mode,thickness=thick),color=color.white )          #change
-
-            curve_renderer_ceres= Entity(model=Mesh(vertices=trail_ceres, mode=curve_mode,thickness=thick),color=color.white )          #change
-            
-        except:
-            pass
-
-        #time.sleep(0.5)
-
+    solarsystem.custom_update()
 app.run()
+
+
+                        
+
+
+
+                        
