@@ -22,17 +22,17 @@ class SolarSystem():
 
 
     def __set_date_year(self):    
-        #self._start_date = '{}-01-04'
-        #self._end_date = '{}-12-31' 
+        #self._start_date = "{}-01-04"
+        #self._end_date = "{}-12-31" 
         self._start_year=0
         self._end_year=0
         self._year=self._start_year
-        self._month='01'
-        self._day='01'
-        self._hour='00'
+        self._month="01"
+        self._day="01"
+        self._hour="00"
         self._minute='00'
         self._second='00'
-        self._date_frequency='D'
+        self._date_frequency='Daily'
         self._start_date=cftime.datetime
         self._end_date=cftime.datetime
         self._end_arr=[]
@@ -181,10 +181,27 @@ class SolarSystem():
 
         self._update_frequency=1.0
 
-        self._date_frequency_options_dict={'Hourly':'H',
+        self._date_frequency_options_dict={'Hourly':'h',
                                            'Daily': 'D',
                                            'Monthly': 'ME'
                                            }
+        
+        self._axial_rotation_multiplier={'Hourly':3600,
+                                         'Daily': 86400,
+                                        'Monthly': 2629845}
+        
+        self._ursina_color={'violet':color.violet,
+                           'cyan':color.cyan,
+                           'blue':color.blue,
+                           'green':color.green,
+                           'yellow':color.yellow,
+                           'orange':color.orange,
+                           'red':color.red,
+                           'pink':color.pink,
+                           'white':color.white
+                        }
+        
+        
     
     def __km2au(self,val_km: float):
         return (spiceypy.convrt(val_km,'km','au'))*self._multiplier
@@ -208,13 +225,12 @@ class SolarSystem():
         self.__set_start_end_date(forced)
         _, temp_number_of_days = calendar.monthrange(self._year, int(self._month))
 
-        if self._date_frequency=='ME' and int(self._day)<temp_number_of_days:
+        if self._date_frequency_options_dict[self._date_frequency]=='ME' and int(self._day)<temp_number_of_days:
             #print([self._year,self._month,self._day,temp_number_of_days])
             self._dates.clear()
             for m in range (int(self._month),13):
                 
                 if self._year==self._end_year and m==self._end_arr[1]:
-                    print("line 216: ",self._day,' ', self._end_arr[2])
                     if int(self._day)>self._end_arr[2]:
                         self._day=self._end_arr[2]-1
                 cf_time_object=cftime.datetime(year=self._year,
@@ -226,7 +242,7 @@ class SolarSystem():
                                                )
                 self._dates.append(cf_time_object)
         else:
-            self._dates=list(xr.cftime_range(self._start_date, self._end_date, freq=self._date_frequency))
+            self._dates=list(xr.cftime_range(self._start_date, self._end_date, freq=self._date_frequency_options_dict[self._date_frequency]))
             if self._year==self._end_year and len(self._dates) < (self._end_arr[1]-int(self._month)+1):
                 cf_time_object=cftime.datetime(year=self._year,
                                                month=self._end_arr[1],
@@ -245,31 +261,10 @@ class SolarSystem():
 
     
     def __create_planet_dict(self):
-        self.planets_info={
-                   "sun": {'id': 10 ,'radius_km':696340 , 'texture':r"..\Assets\8k_sun.png" , 'rotation_x': -90, 'rotation_y': -0.00015, 'rotation_z': 7.25, 'obs_planet_id': 10, 'color': None},
-                   "mercury": {'id': 1 ,'radius_km':2439, 'texture':r"..\Assets\mercury.png" , 'rotation_x': -90, 'rotation_y': -0.00007, 'rotation_z': 0.03, 'obs_planet_id': 10, 'color': color.violet},
-                   "venus": {'id': 2 ,'radius_km':6052 , 'texture':r"..\Assets\venus_atmosphere.png" , 'rotation_x': -90, 'rotation_y': -0.00104, 'rotation_z': 2.64, 'obs_planet_id': 10, 'color': color.cyan},
-                   "earth": {'id': 399 ,'radius_km':6387 , 'texture':r"..\Assets\earth_daymap.png" , 'rotation_x': -90, 'rotation_y': -0.00417, 'rotation_z': 23.44, 'obs_planet_id': 10, 'color': color.blue},
-                   "moon": {'id': 301 ,'radius_km':1738 , 'texture':r"..\Assets\moon.png" , 'rotation_x': -90, 'rotation_y': -0.00015, 'rotation_z': 6.68, 'obs_planet_id': 10, 'color': color.blue},
-                   "mars": {'id': 4 ,'radius_km':3393 , 'texture':r"..\Assets\mars.png" , 'rotation_x': -90, 'rotation_y': -0.00401, 'rotation_z': 25.19, 'obs_planet_id': 10, 'color': color.green},
-                   "phobos": {'id': 401 ,'radius_km':11.2 , 'texture':r"..\Assets\phobos.png" , 'rotation_x': -90, 'rotation_y': -0.01307, 'rotation_z': 0.0, 'obs_planet_id': 4, 'color': color.green},
-                   "deimos": {'id': 402 ,'radius_km':6.3 , 'texture':r"..\Assets\deimos.png" , 'rotation_x': -90, 'rotation_y': -0.00330, 'rotation_z': 2, 'obs_planet_id': 4, 'color': color.green},
-                   "jupiter": {'id': 5 ,'radius_km':69911 , 'texture':r"..\Assets\jupiter.png" , 'rotation_x': -90, 'rotation_y': -0.01001, 'rotation_z': 3.13, 'obs_planet_id': 10, 'color': color.yellow},
-                   "io": {'id': 501 ,'radius_km':1821 , 'texture':r"..\Assets\io.png" , 'rotation_x': -90, 'rotation_y': -0.00236, 'rotation_z': 0, 'obs_planet_id': 5, 'color': color.yellow},
-                   "europa": {'id': 502 ,'radius_km':1560.8 , 'texture':r"..\Assets\europa.png" , 'rotation_x': -90, 'rotation_y': -0.00118, 'rotation_z': 0.1, 'obs_planet_id': 5, 'color': color.yellow},
-                   "ganymede": {'id': 503 ,'radius_km':2634.1 , 'texture':r"..\Assets\ganymede.jpg" , 'rotation_x': -90, 'rotation_y': -0.00058, 'rotation_z': 0.33, 'obs_planet_id': 5, 'color': color.yellow},
-                   "callisto": {'id': 504 ,'radius_km':2410.3 , 'texture':r"..\Assets\callisto.png" , 'rotation_x': -90, 'rotation_y': -0.00025, 'rotation_z': 0.0, 'obs_planet_id': 5, 'color': color.yellow},
-                   "saturn": {'id': 6 ,'radius_km':60268 , 'texture':r"..\Assets\saturn.png" , 'rotation_x': -90, 'rotation_y': -0.00946, 'rotation_z': 26.73, 'obs_planet_id': 10, 'color': color.orange},
-                   "rhea": {'id': 605 ,'radius_km':763.8 , 'texture':r"..\Assets\rhea.png" , 'rotation_x': -90, 'rotation_y': -0.00092, 'rotation_z': 0.0, 'obs_planet_id': 6, 'color': color.orange},
-                   "titan": {'id': 606 ,'radius_km':2574.8 , 'texture':r"..\Assets\titan.png" , 'rotation_x': -90, 'rotation_y': -0.00026, 'rotation_z': 27, 'obs_planet_id': 6, 'color': color.orange},
-                   "uranus": {'id': 7 ,'radius_km':25559 , 'texture':r"..\Assets\uranus.png" , 'rotation_x': -90, 'rotation_y': -0.00580, 'rotation_z': 82.23, 'obs_planet_id': 10, 'color': color.red},
-                   "titania": {'id': 703 ,'radius_km':789 , 'texture':r"..\Assets\titania.png" , 'rotation_x': -90, 'rotation_y': -0.00048, 'rotation_z': 0.0, 'obs_planet_id': 7, 'color': color.red},
-                   "neptune": {'id': 8 ,'radius_km':24764 , 'texture':r"..\Assets\neptune.png" , 'rotation_x': -90, 'rotation_y': -0.00621, 'rotation_z': 28.32, 'obs_planet_id': 10, 'color': color.pink},
-                   "triton": {'id': 801 ,'radius_km':1355 , 'texture':r"..\Assets\triton.png" , 'rotation_x': -90, 'rotation_y': -0.00071, 'rotation_z': 30, 'obs_planet_id': 8, 'color': color.pink},
-                   "pluto": {'id': 9 ,'radius_km':1140 , 'texture':r"..\Assets\pluto.png" , 'rotation_x': -90, 'rotation_y': -0.00065, 'rotation_z': 120, 'obs_planet_id': 10, 'color': color.white},
-                   "charon": {'id': 901 ,'radius_km':606 , 'texture':r"..\Assets\charon.png" , 'rotation_x': -90, 'rotation_y': -0.00065, 'rotation_z': 119.6, 'obs_planet_id': 9, 'color': color.white},
-                   "ceres": {'id': 2000001 ,'radius_km':476 , 'texture':r"..\Assets\ceres_fictional.png" , 'rotation_x': -90, 'rotation_y': -0.000002, 'rotation_z': 4, 'obs_planet_id': 10, 'color': color.white}
-                   }
+        with open(r"..\Assets\Planets_info.json",'r') as planet_json_file:
+            self.planets_info=json.load(planet_json_file)
+            
+        
         self._master_planet_dict={}
         temp_planet_details_dict={
                                   'entity': None,
@@ -285,12 +280,36 @@ class SolarSystem():
                                   }
         for planet in self.planets_info.keys():
             self._master_planet_dict[planet]=temp_planet_details_dict.copy()
-            self._master_planet_dict[planet]['entity']=Entity(name=planet, model='sphere',collider='box',
+            if planet in ["saturn_ring"]:
+                self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
                                                                 rotation_x = self.planets_info[planet]['rotation_x'],
                                                                 rotation_z= self.planets_info[planet]['rotation_z'],
-                                                                scale=self.__km2au(self.planets_info[planet]['radius_km'])*2,
+                                                                scale=6.68459e-9*10000,
                                                                 texture=self.planets_info[planet]['texture']
-                                                             )
+                                                            )
+
+
+            else:
+                if self.planets_info[planet]['texture']=='None':
+                    self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
+                                                                    rotation_x = self.planets_info[planet]['rotation_x'],
+                                                                    rotation_z= self.planets_info[planet]['rotation_z'],
+                                                                    scale=self.__km2au(self.planets_info[planet]['radius_km'])*2
+                                                                    
+                                                                    
+                                                                )
+
+                else:    
+                    self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
+                                                                        rotation_x = self.planets_info[planet]['rotation_x'],
+                                                                        rotation_z= self.planets_info[planet]['rotation_z'],
+                                                                        scale=self.__km2au(self.planets_info[planet]['radius_km'])*2,
+                                                                        texture=self.planets_info[planet]['texture']
+                                                                    )
+                    
+
+
+            
             self._master_planet_dict[planet]['planet_id']=self.planets_info[planet]['id']
             self._master_planet_dict[planet]['axial_rotation']=self.planets_info[planet]['rotation_y']
             self._master_planet_dict[planet]['sibling_entity']=Entity(name=planet, visible=True, collider='box',
@@ -304,9 +323,9 @@ class SolarSystem():
                                                                      )
 
             if planet!='sun':
-                self._master_planet_dict[planet]['trail_deque']=deque([],maxlen=100)
+                self._master_planet_dict[planet]['trail_deque']=deque([],maxlen=80)
                 self._master_planet_dict[planet]['curve_renderer']=Entity()
-                self._master_planet_dict[planet]['trail_color']=self.planets_info[planet]['color']
+                self._master_planet_dict[planet]['trail_color']=self._ursina_color[self.planets_info[planet]['color']]
     def __set_all_follow_false(self):
         for i in self._master_planet_dict.keys():
             self._master_planet_dict[i]['follow']=False  
@@ -472,9 +491,9 @@ class SolarSystem():
                                 temp_t_t:= Text('Set Time HH:MM:SS'),
                                 temp_time_field := InputField( limit_content_to=':0123456789', active=False),
                                 temp_d_f_t:= Text('Set Date Change Frequency'),
-                                temp_date_frequency_button := ButtonGroup(['Hourly', 'Daily', 'Monthly'],
+                                temp_date_frequency_button := ButtonGroup(self._date_frequency_options_dict.keys(),
                                                                           max_selection=1,min_selection=1,
-                                                                          default='Daily',
+                                                                          default=self._date_frequency,
                                                                           spacing=(0.1,0,0)
                                                                           ),
                                 temp_u_f_t:= Text('Set Update Frequency: '),
@@ -526,7 +545,7 @@ class SolarSystem():
         def _date_frequency_button_on_value_changed():
                 temp=str(self._date_frequency_button.value)
                 if temp in self._date_frequency_options_dict.keys():
-                    self._date_frequency=self._date_frequency_options_dict[temp]
+                    self._date_frequency=temp
                     #self.__gen_dates(forced=True)
 
         self._date_frequency_button.on_value_changed = _date_frequency_button_on_value_changed
@@ -546,7 +565,7 @@ class SolarSystem():
         self._wp.disable()
         self._wp._always_on_top=True
         self._wp.bg.on_click=None
-        self._wp.panel.world_scale=Vec3(20,15,0)
+        self._wp.panel.world_scale=Vec3(20,25,0)
         try:
             self._wp.panel.texture=r'..\Assets\flipped_vertical_gradient'
         except:
@@ -609,18 +628,22 @@ class SolarSystem():
     
     def __camera_control(self):      
         if self._mouse_drag and self._mouse_drag_initial!=None:
-            camera.x-=abs(camera.z) * (mouse.x - self._mouse_drag_initial[0]) * time.dt
-            camera.y-=abs(camera.z) * (mouse.y - self._mouse_drag_initial[1]) * time.dt
+            temp_x=mouse.x - self._mouse_drag_initial[0]
+            temp_y=mouse.y - self._mouse_drag_initial[1]
+
+            camera.position+=abs(camera.z) * (camera.up*abs(min(0,temp_y))+camera.down*abs(max(0,temp_y))) * time.dt * self._sensi * 100
+            camera.position+=abs(camera.z) * (camera.right*abs(min(0,temp_x))+camera.left*abs(max(0,temp_x))) * time.dt * self._sensi *100
+    
             
         if self._collider_ray.entity==None:
             camera.position +=camera.forward *100 * held_keys['w'] * time.dt * abs(camera.z) * 0.005
         camera.position +=camera.back * 100 * held_keys['s'] * time.dt * abs(camera.z) * 0.005
 
         
-        camera.position +=camera.left * 100 * held_keys['a'] * time.dt
-        camera.position +=camera.right * 100 * held_keys['d'] * time.dt
-        camera.position +=camera.up * 100 * held_keys['z'] * time.dt
-        camera.position +=camera.down * 100 * held_keys['x'] * time.dt
+        camera.position +=camera.left * 10 * held_keys['a'] * time.dt
+        camera.position +=camera.right * 10 * held_keys['d'] * time.dt
+        camera.position +=camera.up * held_keys['z'] * time.dt
+        camera.position +=camera.down  * held_keys['x'] * time.dt
         
         camera.rotate(Vec3(10 *held_keys['down arrow'] * time.dt ,
                               10 *held_keys['right arrow'] * time.dt ,
@@ -635,10 +658,13 @@ class SolarSystem():
             
             self._mouse_drag=False
             self._mouse_drag_initial=None
-            camera.x+=abs(camera.z) * mouse.x * time.dt
-            camera.y+=abs(camera.z) * mouse.y * time.dt
+            
+            temp_pos=(camera.down*mouse.y + camera.left*mouse.x) * abs(camera.z) * 0.5
+            camera.position=Vec3(temp_pos[0] ,
+                                 temp_pos[1] ,
+                                 camera.position[2])
 
-        
+    
 
     def custom_input(self,key):
         if key=='scroll up':
@@ -840,47 +866,47 @@ class SolarSystem():
                 if self._year>self._end_year:  
                     self._year=self._start_year
                     #print([int(self._day),self._end_arr[2]-1])
-                    if self._date_frequency=='ME' and int(self._day)==self._end_arr[2]-1:
+                    if self._date_frequency_options_dict[self._date_frequency]=='ME' and int(self._day)==self._end_arr[2]-1:
                         self._day='31'     
                 self.__gen_dates()
                 self._cur_year_dict_index=0
             temp_cur_et=spiceypy.utc2et(temp_cur_utc)
             
-
-            for planet in self._master_planet_dict.keys():
-                
-                self.__focus(planet,temp_cur_et)
-                if planet!='sun':
-                    temp_obs_planet_id=self._master_planet_dict[planet]['obs_planet_id']
-                    if temp_obs_planet_id!=10:
-                        self._master_planet_dict[planet]['entity'].position= self.__gen_pos(self._master_planet_dict[planet]['planet_id'],temp_cur_et,temp_obs_planet_id) + self.__gen_pos(temp_obs_planet_id,temp_cur_et,10)
-                    else:
-                        self._master_planet_dict[planet]['entity'].position=self.__gen_pos(self._master_planet_dict[planet]['planet_id'],temp_cur_et,temp_obs_planet_id)           
-                self._master_planet_dict[planet]['sibling_entity'].position=self._master_planet_dict[planet]['entity'].position
-                self._master_planet_dict[planet]['text_tag_entity'].world_position=self._master_planet_dict[planet]['sibling_entity'].position
-                self._master_planet_dict[planet]['text_tag_entity'].world_scale=abs(camera.z) * 0.50
-                self._master_planet_dict[planet]['entity'].rotate(Vec3(0,
-                                                                    self._master_planet_dict[planet]['axial_rotation'],
-                                                                    0
-                                                                    )
-                                                                )       
-                if planet!='sun':
-                    if self._delay_counter==0 :
-                        self._master_planet_dict[planet]['trail_deque'].append(self._master_planet_dict[planet]['entity'].position)
+            if self._delay_counter==0:
+                for planet in self._master_planet_dict.keys():
                     
-                    if self._toggle_trail :
-                        destroy(self._master_planet_dict[planet]['curve_renderer'])
-                    
-                        try:
-                            self._master_planet_dict[planet]['curve_renderer']= Entity(model=Mesh(
-                                                                                                vertices=self._master_planet_dict[planet]['trail_deque'],
-                                                                                                mode=self._curve_mode,
-                                                                                                thickness=self._thick
-                                                                                                ),
-                                                                                    color=self._master_planet_dict[planet]['trail_color'] 
-                                                                                    )  
-                        except:
-                            pass
+                    self.__focus(planet,temp_cur_et)
+                    if planet!='sun':
+                        temp_obs_planet_id=self._master_planet_dict[planet]['obs_planet_id']
+                        if temp_obs_planet_id!=10:
+                            self._master_planet_dict[planet]['entity'].position= self.__gen_pos(self._master_planet_dict[planet]['planet_id'],temp_cur_et,temp_obs_planet_id) + self.__gen_pos(temp_obs_planet_id,temp_cur_et,10)
+                        else:
+                            self._master_planet_dict[planet]['entity'].position=self.__gen_pos(self._master_planet_dict[planet]['planet_id'],temp_cur_et,temp_obs_planet_id)           
+                    self._master_planet_dict[planet]['sibling_entity'].position=self._master_planet_dict[planet]['entity'].position
+                    self._master_planet_dict[planet]['text_tag_entity'].world_position=self._master_planet_dict[planet]['sibling_entity'].position
+                    self._master_planet_dict[planet]['text_tag_entity'].world_scale=abs(camera.z) * 0.50
+                    self._master_planet_dict[planet]['entity'].rotate(Vec3(0,
+                                                                        self._master_planet_dict[planet]['axial_rotation']*self._axial_rotation_multiplier[self._date_frequency],
+                                                                        0
+                                                                        )
+                                                                    )       
+                    if planet!='sun':
+                        if self._delay_counter==0 :
+                            self._master_planet_dict[planet]['trail_deque'].append(self._master_planet_dict[planet]['entity'].position)
+                        
+                        if self._toggle_trail :
+                            destroy(self._master_planet_dict[planet]['curve_renderer'])
+                        
+                            try:
+                                self._master_planet_dict[planet]['curve_renderer']= Entity(model=Mesh(
+                                                                                                    vertices=self._master_planet_dict[planet]['trail_deque'],
+                                                                                                    mode=self._curve_mode,
+                                                                                                    thickness=self._thick
+                                                                                                    ),
+                                                                                        color=self._master_planet_dict[planet]['trail_color'] 
+                                                                                        )  
+                            except:
+                                pass
 
 app=Ursina()
 window.color=color.black
@@ -891,6 +917,10 @@ def input(key):
 def update():
     solarsystem.custom_update()
 app.run()
+
+
+                        
+
 
 
                         
