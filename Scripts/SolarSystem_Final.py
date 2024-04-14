@@ -129,7 +129,7 @@ class SolarSystem():
         self._toggle_trail=False
         self._multiplier=1000
         self._cur_year_dict_index=0
-        self._year_text='<red>CURRENT DATE</red>\n<green>{}-{}-{}</green><red>\nCURRENT TIME</red>\n<green>{}:{}:{}</green><red>\nZoom</red>\n<green>{}</green>'
+        self._year_text='<red>CURRENT DATE</red>\n<green>{}-{}-{}</green><red>\nCURRENT TIME</red>\n<green>{}:{}:{}</green><red>\nZoom</red>\n<green>{}</green><red>\nCURRENT ACTIVE ACTIONS</red><green>{}</green>'
         self._cur_year_txt = Text(scale=1,position=(-0.85,0.45,0))
         self._sensi=0.005
         self._current_focus='sun'
@@ -201,7 +201,7 @@ class SolarSystem():
                            'white':color.white
                         }
         
-        
+        self._active_action_list=['None']
     
     def __km2au(self,val_km: float):
         return (spiceypy.convrt(val_km,'km','au'))*self._multiplier
@@ -348,7 +348,6 @@ class SolarSystem():
     def __scale_sensitivity(self):
         self._sensi = self._slider.value/1000
 
-   
 
     def __focus(self,planet_name: str, cur_et):
         if planet_name==None:
@@ -665,6 +664,19 @@ class SolarSystem():
                                  camera.position[2])
 
     
+    def __update_active_action_list(self,text: str,append: bool):
+        if append:
+            if text not in self._active_action_list:
+                self._active_action_list.append(text)
+                self.__update_active_action_list(text='None',append=False)
+        else:   
+            if text in self._active_action_list:
+                self._active_action_list.remove(text)
+                if self._active_action_list==[]:
+                    self._active_action_list=['None']
+
+        
+
 
     def custom_input(self,key):
         if key=='scroll up':
@@ -676,16 +688,27 @@ class SolarSystem():
         
         elif key=='left mouse down' and not self._mouse_enabled_movement:
             self._mouse_drag=True
-            if self._mouse_drag_initial==None:
+            if self._pause_menu_enabled:
+                self._mouse_drag=False
+            if self._mouse_drag_initial==None and self._mouse_drag:
                 self._mouse_drag_initial=mouse.position
+                self.__update_active_action_list(text='Mouse Drag',append=True)
         
         elif key=='left mouse up' and not self._mouse_enabled_movement:
             self._mouse_drag=False
             self._mouse_drag_initial=None
+            self.__update_active_action_list(text='Mouse Drag',append=False)
         
         elif key in ['m','M']:
-            self._mouse_enabled_movement = not self._mouse_enabled_movement
-        
+            if self._toggle_free and not self._pause_menu_enabled:
+                self._mouse_enabled_movement = not self._mouse_enabled_movement
+            else:
+                pass
+            if self._mouse_enabled_movement:
+                self.__update_active_action_list(text='Following mouse',append=True)
+            else:   
+                self.__update_active_action_list(text='Following mouse',append=False)
+
         elif key in ['t','T']:
             if self._toggle_trail:
                 try:
@@ -693,7 +716,12 @@ class SolarSystem():
                         destroy(self._master_planet_dict[planet]['curve_renderer'])
                 except:
                     pass    
-            self._toggle_trail = not self._toggle_trail 
+            self._toggle_trail = not self._toggle_trail
+
+            if self._toggle_trail:
+                self.__update_active_action_list(text='Showing Trails',append=True)
+            else:   
+                self.__update_active_action_list(text='Showing Trails',append=False)
 
         elif key in ['f','F']:
             if window.size!=window.fullscreen_size:
@@ -716,21 +744,32 @@ class SolarSystem():
                     self._master_planet_dict[planet]['trail_deque'].clear()     
                 except:
                     pass
+
         elif key=='escape':
             self._pause_menu_enabled= not self._pause_menu_enabled
             if self._pause_menu_enabled:
-                self._pause=True
+                #self._pause=True
+                self._mouse_enabled_movement=False
+                self.__update_active_action_list(text='Following mouse',append=False)
+
                 self._drop_menu.disable()
                 self._wp.enable()
+                self.__update_active_action_list(text='Pause Menu Opened',append=True)
             else:
-                self._pause=False
+                #self._pause=False
                 self._drop_menu.enable()
                 self._wp.disable()
                 self.__gen_dates(forced=True)
                 self._cur_year_dict_index=0
+                self.__update_active_action_list(text='Pause Menu Opened',append=False)
 
         elif key in ['p','P']:
             self._pause= not self._pause
+            
+            if self._pause:
+                self.__update_active_action_list(text='Simulation Paused',append=True)
+            else:   
+                self.__update_active_action_list(text='Simulation Paused',append=False)
         
   
 
@@ -772,7 +811,7 @@ class SolarSystem():
                     self._time_selector_field.text=self._time_selector_field.text[:7]
             else:
                 temp=self._time_selector_field.text
-                temp_temp=''
+                
                 if len(temp)<=6:
                     temp+='0'*(6-len(temp))
                     if int(temp[0:2])<24 and int(temp[2:4])<60 and int(temp[4:6])<60:
@@ -801,10 +840,10 @@ class SolarSystem():
                 else:
                     self._update_frequency=float(temp)
             
-            return
-    
+        
         
         self.__camera_control()
+        
         if abs(camera.z)>self._max_far_zoom:
             camera.z=-self._max_far_zoom
         
@@ -819,7 +858,8 @@ class SolarSystem():
         
         self._cur_year_txt.text = self._year_text.format(self._year,self._month,self._day,
                                                          self._hour,self._minute,self._second,
-                                                         camera.z) 
+                                                         camera.z,
+                                                         ''.join('\n'+e for e in self._active_action_list)) 
 
         if self._toggle_free:
             self._info.disable()
@@ -842,6 +882,9 @@ class SolarSystem():
                             except:
                                 pass    
         else:
+            
+            
+        
             self._delay_counter+=time.dt
             
             temp_cur_utc=str(self._dates[self._cur_year_dict_index])
