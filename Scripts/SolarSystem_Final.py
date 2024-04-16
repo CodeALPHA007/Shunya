@@ -18,7 +18,8 @@ class SolarSystem():
         self.__set_constants()
         self.__create_planet_dict()
         #self.__gen_dates(self._start_date.format(self._year),self._end_date.format(self._year))
-        self.__gen_dates()
+        ##self.__gen_dates()     #for starting the counting fromthe first month
+        self.__gen_dates(forced=True)
 
 
     def __set_date_year(self):    
@@ -26,12 +27,20 @@ class SolarSystem():
         #self._end_date = "{}-12-31" 
         self._start_year=0
         self._end_year=0
+        """ 
         self._year=self._start_year
         self._month="01"
         self._day="01"
         self._hour="00"
         self._minute='00'
         self._second='00'
+        """
+        temp_current_time=datetime.datetime.now().strftime('%Y %m %d %H %M %S').split(' ')
+        self._year=int(temp_current_time[0])
+        self._month , self._day=temp_current_time[1:3]
+        self._hour, self._minute, self._second=temp_current_time[3:6]
+        
+        
         self._date_frequency='Daily'
         self._start_date=cftime.datetime
         self._end_date=cftime.datetime
@@ -109,9 +118,10 @@ class SolarSystem():
         temp_start=str(max(temp_start_dt_arr))
         temp_end=str(min(temp_end_dt_arr)) 
         self._start_year=int(temp_start[:4])
-        self._year=self._start_year
+        """ self._year=self._start_year
         self._month=temp_start[4:6]
         self._day=temp_start[6:] 
+         """
         self._start_arr=[int(temp_start[:4]),
                        int(temp_start[4:6]),
                        int(temp_start[6:])
