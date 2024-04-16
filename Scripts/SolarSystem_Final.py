@@ -132,6 +132,8 @@ class SolarSystem():
                        int(temp_end[6:])
                        ]
         self._end_year=self._end_arr[0]
+        if self._year>=self._end_year:
+            self._year=self._start_year
             
             
 
