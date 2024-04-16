@@ -6,12 +6,13 @@ from collections import deque
 import xarray as xr
 import cftime
 from ursina.prefabs.dropdown_menu import DropdownMenu, DropdownMenuButton
+
 import time as Time
 import pandas as pd
 import calendar
 import json
 
-class SolarSystem():
+class SolarSystem:
     def __init__(self):
         self.__set_date_year()
         self.__set_kernels()
@@ -1038,9 +1039,16 @@ class SolarSystem():
                             except:
                                 pass
 
-app=Ursina(title='Project Shunya', icon=r'../Assets/Solar-system.ico')
+app=Ursina(title='Project Shunya', icon=r'../Assets/Solar-system.ico' )
+
+camera.overlay.color=color.black
+logo = Sprite(name='ursina_splash', parent=camera.ui, texture='../Assets/logo.jpg', world_z=camera.overlay.z-1, scale=0.25, color=color.clear)
+logo.animate_color(color.white, duration=4, delay=2, curve=curve.out_quint_boomerang)
+camera.overlay.animate_color(color.clear, duration=2, delay=7)
+destroy(logo, delay=10)
+
 window.color=color.black
-window._icon='../Assets/Solar-system.ico'
+window._icon='../Assets/Solar-sys.ico'
 window._title='Project Shunya'
 solarsystem=SolarSystem()
 solarsystem.load_widgets()
