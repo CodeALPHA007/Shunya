@@ -129,7 +129,7 @@ class SolarSystem():
         self._toggle_trail=False
         self._multiplier=1000
         self._cur_year_dict_index=0
-        self._year_text='<red>CURRENT DATE</red>\n<green>{}-{}-{}</green><red>\nCURRENT TIME</red>\n<green>{}:{}:{}</green><red>\nZoom</red>\n<green>{}</green><red>\nCURRENT ACTIVE ACTIONS</red><green>{}</green>'
+        self._year_text='<red>CURRENT DATE</red>\n<green>{}-{}-{}</green><red>\nCURRENT TIME</red>\n<green>{}:{}:{}</green><red>\nZoom</red>\n<green>{}</green><red>\nACTIVE ACTIONS</red><green>{}</green>'
         self._cur_year_txt = Text(scale=1,position=(-0.85,0.45,0))
         self._sensi=0.005
         self._current_focus='sun'
@@ -202,7 +202,11 @@ class SolarSystem():
                         }
         
         self._active_action_list=['None']
-    
+
+        self._pause_menu_return_val=[self._year,self._month,self._day,
+                                     self._hour,self._minute,self._second]  
+
+        
     def __km2au(self,val_km: float):
         return (spiceypy.convrt(val_km,'km','au'))*self._multiplier
 
@@ -364,6 +368,7 @@ class SolarSystem():
 
         elif self._master_planet_dict[planet_name]['follow']:
             self._mouse_enabled_movement=False
+            self.__update_active_action_list(text='Following mouse',append=False)
             camera.position=Vec3(0,0,self._default_zoom)
             camera.rotation=Vec3(0,0,0)
             camera.parent=self._master_planet_dict[planet_name]['sibling_entity']
@@ -432,33 +437,40 @@ class SolarSystem():
         
         def __cal(x: int):
                      
-            temp=str(x)
-            if int(temp)%10==int(temp):
-                temp="0{}".format(int(temp))
-            self._month=temp
-            self._month_drop.text='Month: '+self._month
+            temp_month=str(x)
+            if int(temp_month)%10==int(temp_month):
+                temp_month="0{}".format(int(temp_month))
+            self._pause_menu_return_val[1]=temp_month
+            
+            self._month_drop.text='Month: '+self._pause_menu_return_val[1]
         
-            temp_days=calendar.month(self._year,x).split()[9:]
-            temp_input_year=int(self._year_selector.text)
+            temp_days=calendar.month(self._pause_menu_return_val[0],x).split()[9:]
+            temp_input_year=self._pause_menu_return_val[0]
             
             if temp_input_year==self._end_year:
-                if int(self._month)==self._end_arr[1]:
+                if int(self._pause_menu_return_val[1])==self._end_arr[1]:
                     temp_days=temp_days[:self._end_arr[2]-1]
             
             elif temp_input_year==self._start_year:
-                if int(self._month)==self._start_arr[1]:
+                if int(self._pause_menu_return_val[1])==self._start_arr[1]:
                     temp_days=temp_days[self._start_arr[2]-1:]
             
-            
+
+            self._pause_menu_return_val[2]='0'*(2-len(temp_days[0])) +temp_days[0]
+            #print(self._pause_menu_return_val)
             self._day_selector.options=temp_days
-            self._day_selector.default_values=(self._day,)
+            #self._day_selector.default_values=(self._pause_menu_return_val[2],)
             self._day_selector.enable()
         
             def on_value_changed():
-                temp=str(self._day_selector.value)
-                if int(temp)%10==int(temp):
-                    temp="0{}".format(int(temp))
-                    self._year_selector.active=False
+                try:
+                    temp=str(self._day_selector.value)
+                    if int(temp)%10==int(temp):
+                        temp="0{}".format(int(temp))
+                        self._year_selector.active=False
+                    self._pause_menu_return_val[2]=temp
+                except:
+                    pass    
             self._day_selector.on_value_changed = on_value_changed
 
 
@@ -489,7 +501,9 @@ class SolarSystem():
                                                     bar_color = color.yellow),
                                 temp_y_t:= Text('Set Year [range {} to {}]'.format(self._start_year,self._end_year)),
                                 temp_year_field := InputField( limit_content_to='0123456789', active=False),                 
-                                temp_day_selector:= ButtonGroup(['Day'],max_selection=1,min_selection=1,spacing=(0.05,0.05,0)),
+                                temp_day_selector:= ButtonGroup(['Day'],max_selection=1,
+                                                                min_selection=1,
+                                                                spacing=(0.05,0.05,0)),
                                 temp_t_t:= Text('Set Time HH:MM:SS'),
                                 temp_time_field := InputField( limit_content_to=':0123456789', active=False),
                                 temp_d_f_t:= Text('Set Date Change Frequency'),
@@ -510,7 +524,7 @@ class SolarSystem():
         
         self._year_selector=temp_year_field
         self._year_selector.world_position=temp_y_t.world_position+Vec3(4.5,-1.5,0)
-        self._year_selector.text=str(self._year)
+        self._year_selector.text=str(self._pause_menu_return_val[0])
         self._year_selector.submit_on=['enter',]
         self._year_selector.on_submit=Func(__set_inputfield_inactive,self._year_selector)
         
@@ -539,7 +553,7 @@ class SolarSystem():
         self._time_selector_field.world_position=temp_t_t.world_position+Vec3(4.5,-1.5,0) 
         self._time_selector_field.submit_on=['enter',]
         self._time_selector_field.on_submit=Func(__set_inputfield_inactive,self._time_selector_field)
-        
+        self._time_selector_field.text=''.join(e for e in self._pause_menu_return_val[3:6])
 
         temp_d_f_t.position=temp_t_t.position+Vec3(1.125,0,0)
         
@@ -644,8 +658,8 @@ class SolarSystem():
         
         camera.position +=camera.left * 10 * held_keys['a'] * time.dt
         camera.position +=camera.right * 10 * held_keys['d'] * time.dt
-        camera.position +=camera.up * held_keys['z'] * time.dt
-        camera.position +=camera.down  * held_keys['x'] * time.dt
+        camera.position +=camera.up * 10 * held_keys['z'] * time.dt
+        camera.position +=camera.down  * 10 * held_keys['x'] * time.dt
         
         camera.rotate(Vec3(10 *held_keys['down arrow'] * time.dt ,
                               10 *held_keys['right arrow'] * time.dt ,
@@ -660,13 +674,28 @@ class SolarSystem():
             
             self._mouse_drag=False
             self._mouse_drag_initial=None
-            
-            temp_pos=(camera.down*mouse.y + camera.left*mouse.x) * abs(camera.z) * 0.5
-            camera.position=Vec3(temp_pos[0] ,
+             
+            """ temp_pos=(camera.up*mouse.y + camera.right*mouse.x) *self._sensi * max(abs(camera.z),10) * 10
+            camera.world_position+=Vec3(temp_pos[0] ,
                                  temp_pos[1] ,
-                                 camera.position[2])
+                                 0)
+             """
+            camera.position+= (camera.right*mouse.x + camera.up*mouse.y) *self._sensi * max(abs(camera.z),10) * 10
 
+            temp_multiplier= (held_keys['right mouse'] or held_keys['left mouse']) *time.dt * self._sensi * 10000
+
+            camera.rotate(Vec3(held_keys['right mouse'] * int(bool(held_keys['control'] * temp_multiplier)),
+                                held_keys['right mouse'] * int(not(held_keys['control'] or held_keys['alt'] * temp_multiplier)) ,
+                                held_keys['right mouse'] * int(bool(held_keys['alt'] * temp_multiplier))
+                               )
+                         )
+            camera.rotate(Vec3(-held_keys['left mouse'] * int(bool(held_keys['control'] * temp_multiplier)),
+                                -held_keys['left mouse'] * int(not(held_keys['control'] or held_keys['alt'] * temp_multiplier)) ,
+                                -held_keys['left mouse'] * int(bool(held_keys['alt'] * temp_multiplier))
+                               )
+                         )
     
+
     def __update_active_action_list(self,text: str,append: bool):
         if append:
             if text not in self._active_action_list:
@@ -708,6 +737,7 @@ class SolarSystem():
             else:
                 pass
             if self._mouse_enabled_movement:
+                self.__focus('sun')
                 self.__update_active_action_list(text='Following mouse',append=True)
             else:   
                 self.__update_active_action_list(text='Following mouse',append=False)
@@ -756,12 +786,29 @@ class SolarSystem():
                 self.__update_active_action_list(text='Following mouse',append=False)
 
                 self._drop_menu.disable()
+
+
+                self._pause_menu_return_val=[self._year,self._month,self._day,
+                                     self._hour,self._minute,self._second] 
+                
+                #print(self._pause_menu_return_val)
+
                 self._wp.enable()
+                self._year_selector.text=str(self._year)
+                self._time_selector_field.text=''.join(e for e in self._pause_menu_return_val[3:6])
+                self._month_drop.close()
+                
+                
+                
                 self.__update_active_action_list(text='Pause Menu Opened',append=True)
+
+                
             else:
                 #self._pause=False
                 self._drop_menu.enable()
                 self._wp.disable()
+                self._year, self._month, self._day = self._pause_menu_return_val[0:3]
+                self._hour, self._minute, self._second = self._pause_menu_return_val[3:6]
                 self.__gen_dates(forced=True)
                 self._cur_year_dict_index=0
                 self.__update_active_action_list(text='Pause Menu Opened',append=False)
@@ -798,7 +845,7 @@ class SolarSystem():
                     self.__year_selector_enable(False)
 
                 elif self._month_drop.enabled==True:
-                    self._year=int(self._year_selector.text)
+                    self._pause_menu_return_val[0]=int(self._year_selector.text)
                 
             else:
                 pass
@@ -813,23 +860,30 @@ class SolarSystem():
                     self._time_selector_field.text_color=color.red
                     self._time_selector_field.text=self._time_selector_field.text[:7]
             else:
-                temp=self._time_selector_field.text
                 
+                temp=self._time_selector_field.text
+                temp=temp.replace(":",'')
                 if len(temp)<=6:
                     temp+='0'*(6-len(temp))
-                    if int(temp[0:2])<24 and int(temp[2:4])<60 and int(temp[4:6])<60:
-                        self._hour=temp[0:2]
-                        self._minute=temp[2:4]
-                        self._second=temp[4:6]
+                    if int(temp[0:2])<24 and int(temp[2:4])<60 and int(temp[4:6])<60 :
+                        self._pause_menu_return_val[3]=temp[0:2]
+                        self._pause_menu_return_val[4]=temp[2:4]
+                        self._pause_menu_return_val[5]=temp[4:6]
+                        #self._hour=temp[0:2]
+                        #self._minute=temp[2:4]
+                        #self._second=temp[4:6]
                         
                     
-                self._time_selector_field.text=self._hour+':'+self._minute+':'+self._second
+                self._time_selector_field.text=(''.join(e+':' for e in self._pause_menu_return_val[3:6]))[:8]
                 self._time_selector_field.text_color=color.green
                 
             #self._date_frequency=self._date_frequency_button.value  
-            if self._day_selector.value!='Day':
-                self._day=self._day_selector.value
-
+            try:
+                if self._day_selector.value!='Day':
+                    #self._pause_menu_return_val[2]='0'*(2-len(self._day_selector.value))+self._day_selector.value
+                    pass
+            except:
+                pass
                 
 
             if self._update_frequency_field.active:
@@ -954,8 +1008,10 @@ class SolarSystem():
                             except:
                                 pass
 
-app=Ursina()
+app=Ursina(title='Project Shunya', icon=r'../Assets/Solar-system.ico')
 window.color=color.black
+window._icon='../Assets/Solar-system.ico'
+window._title='Project Shunya'
 solarsystem=SolarSystem()
 solarsystem.load_widgets()
 def input(key):
