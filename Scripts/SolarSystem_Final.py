@@ -47,15 +47,27 @@ class SolarSystem():
         self._end_arr=[]
         self._start_arr=[]
 
-        
+    def __check_leap_year(self,year):
+        if year%100==0:
+            year=year//100
+        if year%4==0:
+            return True
+        else:
+            return False    
+
     def __set_start_end_date(self,forced=False):
+        temp_calendar='365_day'
+        if self.__check_leap_year(self._year):
+            temp_calendar='366_day'
+
         if forced:
             self._start_date=cftime.datetime(year=self._year,
                                                     month=int(self._month),
                                                     day=int(self._day),
                                                     hour=int(self._hour),
                                                     minute=int(self._minute),
-                                                    second=int(self._second)
+                                                    second=int(self._second),
+                                                    calendar=temp_calendar
                                             )
         else:    
             if self._year!=self._start_year:
@@ -64,7 +76,8 @@ class SolarSystem():
                                                 day=1,
                                                 hour=int(self._hour),
                                                 minute=int(self._minute),
-                                                second=int(self._second)
+                                                second=int(self._second),
+                                                calendar=temp_calendar
                                             )    
             else:
                 self._start_date=cftime.datetime(year=self._year,
@@ -72,7 +85,8 @@ class SolarSystem():
                                                 day=self._start_arr[2]+1,
                                                 hour=0,
                                                 minute=0,
-                                                second=0
+                                                second=0,
+                                                calendar=temp_calendar
                                             )
 
 
@@ -82,7 +96,8 @@ class SolarSystem():
                                             day=31,
                                             hour=int(self._hour),
                                             minute=int(self._minute),
-                                            second=int(self._second)
+                                            second=int(self._second),
+                                            calendar=temp_calendar
                                         )
         else:
             self._end_date=cftime.datetime(year=self._year,
@@ -90,7 +105,8 @@ class SolarSystem():
                                             day=self._end_arr[2]-1,
                                             hour=0,
                                             minute=0,
-                                            second=0
+                                            second=0,
+                                            calendar=temp_calendar
                                         )
 
     def __set_kernels(self):  
@@ -448,16 +464,18 @@ class SolarSystem():
         #Pause menu
         
         def __cal(x: int):
-                     
+            self._year_selector.active=False      
             temp_month=str(x)
             if int(temp_month)%10==int(temp_month):
                 temp_month="0{}".format(int(temp_month))
             self._pause_menu_return_val[1]=temp_month
             
             self._month_drop.text='Month: '+self._pause_menu_return_val[1]
-        
-            temp_days=calendar.month(self._pause_menu_return_val[0],x).split()[9:]
-            temp_input_year=self._pause_menu_return_val[0]
+
+            temp_input_year=int(self._year_selector.text)
+            temp_days=calendar.month(temp_input_year,x).split()[9:]
+            #temp_input_year=self._pause_menu_return_val[0]
+            
             
             if temp_input_year==self._end_year:
                 if int(self._pause_menu_return_val[1])==self._end_arr[1]:
@@ -467,7 +485,7 @@ class SolarSystem():
                 if int(self._pause_menu_return_val[1])==self._start_arr[1]:
                     temp_days=temp_days[self._start_arr[2]-1:]
             
-
+            print(temp_days)
             self._pause_menu_return_val[2]='0'*(2-len(temp_days[0])) +temp_days[0]
             #print(self._pause_menu_return_val)
             self._day_selector.options=temp_days
