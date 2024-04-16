@@ -12,6 +12,7 @@ import numpy as np
 import cv2
 import webbrowser
 from collections import deque
+import qdarktheme
 
 L='Hello World. This is a dynamic Text Box.'
 d=deque([' ' for i in range(200)],maxlen=200)
@@ -72,6 +73,8 @@ class MainWindow(QMainWindow):
         self.dlg=loadUi(r"..\Assets\dial_1.ui")
         self.dialog=loadUi(r"..\Assets\dial_2.ui")
         self.dial=loadUi(r"..\Assets\dial_3.ui")
+        self.dlg.slider = QSlider(Qt.Horizontal,self.dlg)
+        self.dlg.slider.hide()
 
     def try_now(self,checked = None):
         loadUi(r"..\Assets\\untitled.ui",self)
@@ -93,12 +96,16 @@ class MainWindow(QMainWindow):
 
         self.button1.clicked.connect(self.show_new)
         self.button2.clicked.connect(self.show_about)
-        self.button3.clicked.connect(self.show_web)
+        self.button3.clicked.connect(lambda: self.show_web('https://yashprogrammer.wordpress.com/'))
         #self.dt.setText("hi")
         self.settings_button.setIcon(QIcon("..\\Assets\\settings.png"))
-        self.fb_btn.setIcon(QIcon("..\\Assets\\fb.png"))
-        self.ln_btn.setIcon(QIcon("..\\Assets\\linkedin.png"))
         self.settings_button.clicked.connect(self.show_dialog)
+
+        self.fb_btn.setIcon(QIcon("..\\Assets\\fb.png"))
+        self.fb_btn.clicked.connect(lambda: self.show_web('https://www.facebook.com/'))
+
+        self.ln_btn.setIcon(QIcon("..\\Assets\\linkedin.png"))
+        self.ln_btn.clicked.connect(lambda: self.show_web('https://www.linkedin.com/login'))
         
         self.button4.clicked.connect(self.show_credits)
 
@@ -126,8 +133,8 @@ class MainWindow(QMainWindow):
         p = convert_to_Qt_format.scaled(1080, 572, Qt.KeepAspectRatio)
         return QPixmap.fromImage(p)
     
-    def show_web(self):
-        webbrowser.open('https://yashprogrammer.wordpress.com/', new= 2)
+    def show_web(self,str):
+        webbrowser.open(str, new= 2)
     
     def show_credits(self):
         self.dial.exec_()
@@ -140,35 +147,51 @@ class MainWindow(QMainWindow):
         
         #dlg.resize(650,350)
         self.dlg.color_btn.clicked.connect(self.on_click)
-        #self.dlg.color_btn.clicked.connect(self.dlg.close)
-        #dlg.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb({}, {}, {}), stop: 1 rgb({}, {}, {}) );".format(color1[0],color1[1],color1[2],color2[0],color2[1],color2[2]))
-
 
         self.dlg.slider_btn.clicked.connect(self.slide)
         #self.dlg.slider_btn.clicked.connect(self.dlg.close)
 
         self.dlg.change_btn.clicked.connect(self.change)
         #self.dlg.change_btn.clicked.connect(self.dlg.close)
+
+        self.dlg.reset_button.clicked.connect(self.back)
+        self.dlg.reset_button.setIcon(QIcon("..\\Assets\\reset.png"))
+
         self.dlg.exec_()
         self.dlg.move(570,170)
-        self.dlg.resize(200,300)
+        self.dlg.resize(230,300)
     
     def change(self):
-        fname=QFileDialog.getOpenFileName(self, "Open file", r".\Assets", 'Images (*.png *.xmp *.jpg)')
+        self._label.show()
+        fname=QFileDialog.getOpenFileName(self, "Open file", r"..\Assets", 'Images (*.png *.xmp *.jpg)')
         if fname[0] != "":
             print(fname[0])
             self.image_label.hide()
-            self._label.setPixmap(QPixmap(r'{}'.format(fname[0])))
+            self._label.setPixmap(QtGui.QPixmap(r'{}'.format(fname[0])).scaled(1080, 572, QtCore.Qt.KeepAspectRatio))
         #self.filename.setText(fname[0])
     
+    def back(self):
+        self.image_label.show()
+        self._label.hide()
+
+        self.setWindowOpacity(1)
+        self.dlg.setWindowOpacity(1)
+        self.dialog.setWindowOpacity(1)
+        self.dial.setWindowOpacity(1)
+        self.dlg.slider.setValue(0)
+
+        self.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(114, 4, 85), stop: 1 rgb(3, 6, 55) );")
+        self.dlg.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(114, 4, 85), stop: 1 rgb(3, 6, 55) );")
+        self.dialog.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(114, 4, 85), stop: 1 rgb(3, 6, 55) );")
+        self.dial.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(114, 4, 85), stop: 1 rgb(3, 6, 55) );")
+
     def slide(self):
-        slider = QSlider(Qt.Horizontal,self.dlg)
         self.dlg.move(470,170)
         self.dlg.resize(500,300) 
-        slider.setGeometry(250, 100, 160, 16)
-        slider.show()
+        self.dlg.slider.setGeometry(250, 100, 160, 16)
+        self.dlg.slider.show()
         # After each value change, slot "scaletext" will get invoked. 
-        slider.valueChanged.connect(self.scale)
+        self.dlg.slider.valueChanged.connect(self.scale)
         #slider.valueChanged.connect(slider.hide)
 
     def scale(self,value):
