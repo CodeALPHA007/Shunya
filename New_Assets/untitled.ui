@@ -142,6 +142,15 @@ background-color: white;</string>
     <property name="text">
      <string/>
     </property>
+    <property name="autoDefault">
+     <bool>false</bool>
+    </property>
+    <property name="default">
+     <bool>false</bool>
+    </property>
+    <property name="flat">
+     <bool>false</bool>
+    </property>
    </widget>
    <widget class="QPushButton" name="button3">
     <property name="geometry">
@@ -196,7 +205,7 @@ font: 12pt &quot;Modern&quot;;</string>
 font: 12pt &quot;Modern&quot;;</string>
     </property>
     <property name="text">
-     <string>Buy us a coffee!</string>
+     <string>User's Guide</string>
     </property>
    </widget>
    <widget class="QPushButton" name="fb_btn">
