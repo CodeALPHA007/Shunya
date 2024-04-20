@@ -27,9 +27,9 @@ class SolarSystem:
         pivot=Entity(unlit=True)
         pivot.world_position=Vec3(0,0,0)
         PointLight(parent=pivot, x=0,y=0, z=0, color=color.white,shadows=False)._light.setColorTemperature(5772)
-        AmbientLight(color= color.dark_gray)
+        self._ambient_light=AmbientLight(color= color.dark_gray)
         filters = CommonFilters(app.win, app.cam)
-        filters.setBloom(blend=(0.3,0.1,0,0.5),mintrigger=0.7,maxtrigger=1.0,desat=0,intensity=5,size='mediumwwwwwww' )
+        filters.setBloom(blend=(0.3,0.1,0,0.5),mintrigger=0.7,maxtrigger=1.0,desat=0,intensity=5,size='medium' )
 
         
 
@@ -386,7 +386,6 @@ class SolarSystem:
             self._master_planet_dict[planet]['planet_id']=self.planets_info[planet]['id']
             self._master_planet_dict[planet]['axial_rotation']=self.planets_info[planet]['rotation_y']
             self._master_planet_dict[planet]['sibling_entity']=Entity(name=planet, visible=True, collider='box',
-                                                                      unlit=True,
                                                                       scale=self.__km2au(self.planets_info[planet]['radius_km'])*2
         
                                                                      )
@@ -802,7 +801,7 @@ class SolarSystem:
         
         if key=='space':
             self._start=True
-            self._active_action_list=['None']
+            self._active_action_list=['Ambient Lights On']
 
         if not self._start:
             return
@@ -917,6 +916,22 @@ class SolarSystem:
                 self.__update_active_action_list(text='Simulation Paused',append=True)
             else:   
                 self.__update_active_action_list(text='Simulation Paused',append=False)
+
+        elif key in ['l','L']:
+            print(self._ambient_light.color)
+            if self._ambient_light.color==color.dark_gray:
+                self._ambient_light.color=color.black
+                self._master_planet_dict['sun']['entity'].unlit=False
+                self.__update_active_action_list(text='Ambient Lights On',append=False)
+                self.__update_active_action_list(text='Ambient Lights Off',append=True)
+            elif self._ambient_light.color==color.black:
+                self._ambient_light.color=color.dark_gray
+                self._master_planet_dict['sun']['entity'].unlit=True
+                self.__update_active_action_list(text='Ambient Lights On',append=True)
+                self.__update_active_action_list(text='Ambient Lights Off',append=False)
+                  
+            
+            SystemExit()
         
   
 
