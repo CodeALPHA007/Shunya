@@ -101,14 +101,14 @@ class MainWindow(QMainWindow):
         self.settings_button.setIcon(QIcon("..\\Assets\\settings.png"))
         self.settings_button.clicked.connect(self.show_dialog)
 
-        self.fb_btn.setIcon(QIcon("..\\Assets\\fb.png"))
-        self.fb_btn.clicked.connect(lambda: self.show_web('https://www.facebook.com/'))
+        self.insta_btn.setIcon(QIcon("..\\Assets\\insta.png"))
+        self.insta_btn.clicked.connect(lambda: self.show_web('https://www.facebook.com/'))
 
         self.ln_btn.setIcon(QIcon("..\\Assets\\linkedin.png"))
-        self.ln_btn.clicked.connect(lambda: self.show_web('https://www.linkedin.com/login'))
+        self.ln_btn.clicked.connect(lambda: self.show_web('https://www.linkedin.com/in/team-shunya-95b6a4304/'))
         
         self.button4.clicked.connect(self.show_credits)
-
+        
     def closeEvent(self, event):
         self.thread.stop()
         event.accept()
@@ -142,11 +142,35 @@ class MainWindow(QMainWindow):
     def show_about(self):
         self.dialog.exec_()
     
+    def change(self):
+        self._label.show()
+        fname=QFileDialog.getOpenFileName(self, "Open file", r"..\Assets", 'Images (*.png *.xmp *.jpg)')
+        if fname[0] != "":
+            print(fname[0])
+            self.image_label.hide()
+            self._label.setPixmap(QtGui.QPixmap(r'{}'.format(fname[0])).scaled(1080, 572, QtCore.Qt.KeepAspectRatio))
+        #self.filename.setText(fname[0])
+    
+    def donotshow(self):
+        self.image_label.hide()
+        self._label.hide()
+    
+    def colr(self):
+        color1 = QColorDialog.getColor().getRgb()
+        #print(color1)
+        color2 = QColorDialog.getColor().getRgb()
+        #print(color2)
+        
+        self.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb({}, {}, {}), stop: 1 rgb({}, {}, {}) );".format(color1[0],color1[1],color1[2],color2[0],color2[1],color2[2]))
+        self.dlg.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb({}, {}, {}), stop: 1 rgb({}, {}, {}) );".format(color1[0],color1[1],color1[2],color2[0],color2[1],color2[2]))
+        self.dialog.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb({}, {}, {}), stop: 1 rgb({}, {}, {}) );".format(color1[0],color1[1],color1[2],color2[0],color2[1],color2[2]))
+        self.dial.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb({}, {}, {}), stop: 1 rgb({}, {}, {}) );".format(color1[0],color1[1],color1[2],color2[0],color2[1],color2[2]))
+        
     def show_dialog(self):
         #dlg = QDialog(self)
-        
+        self.dlg.theme_btn.clicked.connect(self.donotshow)
         #dlg.resize(650,350)
-        self.dlg.color_btn.clicked.connect(self.on_click)
+        self.dlg.colorbin.clicked.connect(self.colr)
 
         self.dlg.slider_btn.clicked.connect(self.slide)
         #self.dlg.slider_btn.clicked.connect(self.dlg.close)
@@ -158,17 +182,11 @@ class MainWindow(QMainWindow):
         self.dlg.reset_button.setIcon(QIcon("..\\Assets\\reset.png"))
 
         self.dlg.exec_()
+        self.dlg.change_btn.clicked.disconnect(self.change)
+        self.dlg.colorbin.clicked.disconnect(self.colr)
         self.dlg.move(570,170)
         self.dlg.resize(230,300)
-    
-    def change(self):
-        self._label.show()
-        fname=QFileDialog.getOpenFileName(self, "Open file", r"..\Assets", 'Images (*.png *.xmp *.jpg)')
-        if fname[0] != "":
-            print(fname[0])
-            self.image_label.hide()
-            self._label.setPixmap(QtGui.QPixmap(r'{}'.format(fname[0])).scaled(1080, 572, QtCore.Qt.KeepAspectRatio))
-        #self.filename.setText(fname[0])
+  
     
     def back(self):
         self.image_label.show()
@@ -199,18 +217,6 @@ class MainWindow(QMainWindow):
         self.dlg.setWindowOpacity(1-value/250)
         self.dialog.setWindowOpacity(1-value/250)
         self.dial.setWindowOpacity(1-value/250)
-
-    @pyqtSlot()
-    def on_click(self):
-        color1 = QColorDialog.getColor().getRgb()
-        #print(color1)
-        color2 = QColorDialog.getColor().getRgb()
-        #print(color2)
-        
-        self.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb({}, {}, {}), stop: 1 rgb({}, {}, {}) );".format(color1[0],color1[1],color1[2],color2[0],color2[1],color2[2]))
-        self.dlg.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb({}, {}, {}), stop: 1 rgb({}, {}, {}) );".format(color1[0],color1[1],color1[2],color2[0],color2[1],color2[2]))
-        self.dialog.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb({}, {}, {}), stop: 1 rgb({}, {}, {}) );".format(color1[0],color1[1],color1[2],color2[0],color2[1],color2[2]))
-        self.dial.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb({}, {}, {}), stop: 1 rgb({}, {}, {}) );".format(color1[0],color1[1],color1[2],color2[0],color2[1],color2[2]))
 
     def show_new(self):
         #subprocess.Popen(r".\SolarSystem_Final.exe",shell=True)
