@@ -13,6 +13,8 @@ import pandas as pd
 import calendar
 import json
 
+from direct.filter.CommonFilters import CommonFilters
+
 class SolarSystem:
     def __init__(self):
         self.__set_date_year()
@@ -24,10 +26,11 @@ class SolarSystem:
         self.__gen_dates(forced=True)
         pivot=Entity(unlit=True)
         pivot.world_position=Vec3(0,0,0)
-        PointLight(parent=pivot, x=0,y=0, z=0, color=color.white,shadows=False)
+        PointLight(parent=pivot, x=0,y=0, z=0, color=color.white,shadows=False)._light.setColorTemperature(5772)
         AmbientLight(color= color.dark_gray)
-        #camera.shader=lit_with_shadows_shader
-        
+        filters = CommonFilters(app.win, app.cam)
+        filters.setBloom(blend=(0.3,0.1,0,0.5),mintrigger=0.7,maxtrigger=1.0,desat=0,intensity=5,size='mediumwwwwwww' )
+
         
 
 
@@ -1125,7 +1128,10 @@ window.color=color.black
 window._icon='../Assets/Solar-sys.ico'
 window._title='Project Shunya'
 solarsystem=SolarSystem()
+      
 solarsystem.load_widgets()
+
+
 def ursina_window_exit():
     global window
     #print('hello')
@@ -1147,4 +1153,4 @@ app.run()
 
 
 
-
+                        
