@@ -221,12 +221,11 @@ font: 12pt &quot;Modern&quot;;</string>
      <cursorShape>ArrowCursor</cursorShape>
     </property>
     <property name="toolTip">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Facebook&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Instagram&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="styleSheet">
      <string notr="true">color: white;
 font: italic 10pt &quot;Segoe UI Semilight&quot;;
-border: 0.5px solid blue;
 border-radius:10px;
  background-color: QLinearGradient( x0: 1, y0: 0, x2: 0, y2: 1, stop: 0 rgb(254,218,117), stop: 1 rgb(214,41,118) )</string>
     </property>
@@ -252,7 +251,6 @@ border-radius:10px;
     <property name="styleSheet">
      <string notr="true">color: white;
 font: italic 10pt &quot;Segoe UI Semilight&quot;;
-border: 0.5px solid blue;
 border-radius:10px;
 background-color: rgb(0, 119, 181);</string>
     </property>
