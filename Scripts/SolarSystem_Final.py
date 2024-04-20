@@ -391,8 +391,12 @@ class SolarSystem:
                                                                      )
             self._master_planet_dict[planet]['obs_planet_id']=self.planets_info[planet]['obs_planet_id']
             
+            temp_textfield_text=planet
+            if self._master_planet_dict[planet]['obs_planet_id']!=10 or planet in ['moon','saturn_ring']:
+                temp_textfield_text=''
+
             self._master_planet_dict[planet]['text_tag_entity']=Text(parent=self._master_planet_dict[planet]['sibling_entity'],
-                                                                     text=planet, 
+                                                                     text=temp_textfield_text, 
                                                                      text_color=color.white,
                                                                      unlit=True,
                                                                      scale=camera.z * 0.4
