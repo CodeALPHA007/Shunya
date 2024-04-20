@@ -6,6 +6,7 @@ from collections import deque
 import xarray as xr
 import cftime
 from ursina.prefabs.dropdown_menu import DropdownMenu, DropdownMenuButton
+from ursina.shaders import lit_with_shadows_shader
 
 import time as Time
 import pandas as pd
@@ -21,6 +22,13 @@ class SolarSystem:
         #self.__gen_dates(self._start_date.format(self._year),self._end_date.format(self._year))
         ##self.__gen_dates()     #for starting the counting fromthe first month
         self.__gen_dates(forced=True)
+        pivot=Entity(unlit=True)
+        pivot.world_position=Vec3(0,0,0)
+        PointLight(parent=pivot, x=0,y=0, z=0, color=color.white,shadows=False)
+        AmbientLight(color= color.dark_gray)
+        #camera.shader=lit_with_shadows_shader
+        
+        
 
 
     def __set_date_year(self):    
@@ -230,11 +238,12 @@ class SolarSystem:
                            'white':color.white
                         }
         
-        self._active_action_list=['None']
+        self._active_action_list=['PRESS SPACE\nTo start the\nSimulation']
 
         self._pause_menu_return_val=[self._year,self._month,self._day,
                                      self._hour,self._minute,self._second]  
 
+        self._start=False
         
     def __km2au(self,val_km: float):
         return (spiceypy.convrt(val_km,'km','au'))*self._multiplier
@@ -246,10 +255,18 @@ class SolarSystem:
                                                                   obs=obs
                                                                   )  #change
         x,y,z=temp_planet_state_wrt_sun[:3]
+        #x,z,y=temp_planet_state_wrt_sun[:3] #change
+        
         x=spiceypy.convrt(x,'km','au')*self._multiplier
         y=spiceypy.convrt(y,'km','au')*self._multiplier
         z=spiceypy.convrt(z,'km','au')*self._multiplier
-        return Vec3(x,y,z)
+        return Vec3(y,z,-x)
+        '''
+            URSINA ----- > SPICE
+                X -------->  Y
+                Y --------> Z
+                Z --------> -X
+        '''
 
 
     def __gen_dates(self,forced=False):
@@ -313,7 +330,15 @@ class SolarSystem:
                                   }
         for planet in self.planets_info.keys():
             self._master_planet_dict[planet]=temp_planet_details_dict.copy()
-            if planet in ["saturn_ring"]:
+            temp_scale=''
+            if self.planets_info[planet]["scale"]=="km2au":
+                temp_scale=self.__km2au(self.planets_info[planet]['radius_km'])*2
+            else:
+                #temp_scale_temp=float(self.planets_info[planet]["scale"]) 
+                temp_scale=self.planets_info[planet]["scale"]*self._multiplier
+                #print('HIIIIIIIIIIIIIIIIIIIIIIIIII:  ' , type(temp_scale))
+                
+            """ if planet in ["saturn_ring"]:
                 self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
                                                                 rotation_x = self.planets_info[planet]['rotation_x'],
                                                                 rotation_z= self.planets_info[planet]['rotation_z'],
@@ -321,43 +346,64 @@ class SolarSystem:
                                                                 texture=self.planets_info[planet]['texture']
                                                             )
 
+             """
+            #else:
+            if self.planets_info[planet]['texture']=='None':
+                self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
+                                                                rotation_x = self.planets_info[planet]['rotation_x'],
+                                                                rotation_z= self.planets_info[planet]['rotation_z'],
+                                                                scale=temp_scale
+                                                            )
 
-            else:
-                if self.planets_info[planet]['texture']=='None':
-                    self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
+            else:    
+                """ self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
                                                                     rotation_x = self.planets_info[planet]['rotation_x'],
                                                                     rotation_z= self.planets_info[planet]['rotation_z'],
-                                                                    scale=self.__km2au(self.planets_info[planet]['radius_km'])*2
-                                                                    
-                                                                    
+                                                                    scale=temp_scale,
+                                                                    texture=self.planets_info[planet]['texture']
                                                                 )
-
-                else:    
-                    self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
-                                                                        rotation_x = self.planets_info[planet]['rotation_x'],
-                                                                        rotation_z= self.planets_info[planet]['rotation_z'],
-                                                                        scale=self.__km2au(self.planets_info[planet]['radius_km'])*2,
-                                                                        texture=self.planets_info[planet]['texture']
-                                                                    )
-                    
+                 """
+                
+                #change
+                self._master_planet_dict[planet]['entity']=Entity(name=planet, model=self.planets_info[planet]['model'],collider='box',
+                                                                    rotation_z= self.planets_info[planet]['rotation_z'],
+                                                                    scale=temp_scale,
+                                                                    texture=self.planets_info[planet]['texture']
+                                                                )
+                
+            
 
 
             
+            #x._light.setColor(Vec4(255, 0, 0, 0.5))
+            #x._light.attenuation=(Vec3(0.1,0,0))
+            
+            #self._master_planet_dict[planet]['entity'].flipped_faces_setter(True)
+            self._master_planet_dict[planet]['entity'].model_getter().setTwoSided(True)
             self._master_planet_dict[planet]['planet_id']=self.planets_info[planet]['id']
             self._master_planet_dict[planet]['axial_rotation']=self.planets_info[planet]['rotation_y']
             self._master_planet_dict[planet]['sibling_entity']=Entity(name=planet, visible=True, collider='box',
-                                                                      scale=self.__km2au(self.planets_info[planet]['radius_km'])*2,
+                                                                      unlit=True,
+                                                                      scale=self.__km2au(self.planets_info[planet]['radius_km'])*2
+        
                                                                      )
             self._master_planet_dict[planet]['obs_planet_id']=self.planets_info[planet]['obs_planet_id']
             
             self._master_planet_dict[planet]['text_tag_entity']=Text(parent=self._master_planet_dict[planet]['sibling_entity'],
                                                                      text=planet, 
+                                                                     text_color=color.white,
+                                                                     unlit=True,
                                                                      scale=camera.z * 0.4
                                                                      )
+            if planet=='sun':
+                self._master_planet_dict[planet]['entity'].shader=lit_with_shadows_shader
+                self._master_planet_dict[planet]['entity'].unlit=True
+                #PointLight(parent=self._master_planet_dict[planet]['sibling_entity'], x=0,y=0, z=0, color=color.white)
+        
 
             if planet!='sun':
                 self._master_planet_dict[planet]['trail_deque']=deque([],maxlen=80)
-                self._master_planet_dict[planet]['curve_renderer']=Entity()
+                self._master_planet_dict[planet]['curve_renderer']=Entity(unlit=True)
                 self._master_planet_dict[planet]['trail_color']=self._ursina_color[self.planets_info[planet]['color']]
     def __set_all_follow_false(self):
         for i in self._master_planet_dict.keys():
@@ -392,18 +438,22 @@ class SolarSystem:
                 camera.look_at(self._master_planet_dict['sun']['sibling_entity'])
                 camera.position=(0,10,self._default_zoom)
                 camera.look_at(self._master_planet_dict['sun']['sibling_entity'])
+                camera.always_on_top_setter(True)
                 self._master_planet_dict['sun']['follow']=False
                 self._info._visible=False
+                
 
         elif self._master_planet_dict[planet_name]['follow']:
+            self._master_planet_dict[planet_name]['follow']=False
             self._mouse_enabled_movement=False
             self.__update_active_action_list(text='Following mouse',append=False)
             camera.position=Vec3(0,0,self._default_zoom)
             camera.rotation=Vec3(0,0,0)
             camera.parent=self._master_planet_dict[planet_name]['sibling_entity']
+            camera.always_on_top_setter(True)
             camera.position=Vec3(0,0,0)
             camera.z=self._default_zoom
-            self._master_planet_dict[planet_name]['follow']=False
+            
             camera._always_on_top=True
             self._info.enable()
             self._info._visible=True
@@ -419,7 +469,7 @@ class SolarSystem:
         
         def __set_inputfield_inactive(inputfield):
             inputfield.active=False
-
+        
         #Focus drop down list
         button_list=[
                     DropdownMenuButton('Free rotation',on_click=Func(self.__set_follow,'free')),
@@ -486,7 +536,7 @@ class SolarSystem:
                 if int(self._pause_menu_return_val[1])==self._start_arr[1]:
                     temp_days=temp_days[self._start_arr[2]-1:]
             
-            print(temp_days)
+            #print(temp_days)
             self._pause_menu_return_val[2]='0'*(2-len(temp_days[0])) +temp_days[0]
             #print(self._pause_menu_return_val)
             self._day_selector.options=temp_days
@@ -673,7 +723,11 @@ class SolarSystem:
                     pass
     
     
-    def __camera_control(self):      
+    def __camera_control(self):
+
+        if not self._start:
+            return
+       
         if self._mouse_drag and self._mouse_drag_initial!=None:
             temp_x=mouse.x - self._mouse_drag_initial[0]
             temp_y=mouse.y - self._mouse_drag_initial[1]
@@ -742,6 +796,15 @@ class SolarSystem:
 
 
     def custom_input(self,key):
+        
+        if key=='space':
+            self._start=True
+            self._active_action_list=['None']
+
+        if not self._start:
+            return
+        
+        
         if key=='scroll up':
             if self._collider_ray.entity==None:
                 camera.world_position +=camera.forward*abs(camera.z)*self._sensi
@@ -860,7 +923,7 @@ class SolarSystem:
         #print(self._year,' ',self._month,' ',self._day)
 
         
-
+        
         if self._pause_menu_enabled:
             self._sensi = self._slider.value/1000
             if self._year_selector.active:
@@ -931,17 +994,21 @@ class SolarSystem:
         
         
         self.__camera_control()
+        if int(window.fps_counter.text)<20:
+            self._curve_mode='point'
+        else:
+            self._curve_mode='line'    
+        
         
         if abs(camera.z)>self._max_far_zoom:
             camera.z=-self._max_far_zoom
         
         self._collider_ray = raycast(origin= camera.world_position,
-                                     ignore=(camera,),
-                                     direction= camera.forward,
-                                     distance= 0.3, 
-                                     debug= True
+                                    ignore=(camera,),
+                                    direction= camera.forward,
+                                    distance= 0.3, 
+                                    debug= True
                                     )
-        
         self._drop_menu.text=self._drop_down_text.format(self._current_focus)
         
         self._cur_year_txt.text = self._year_text.format(self._year,self._month,self._day,
@@ -988,7 +1055,8 @@ class SolarSystem:
 
             
             if self._delay_counter>=self._update_frequency:
-                self._cur_year_dict_index += 1
+                if self._start:
+                    self._cur_year_dict_index += 1
                 self._delay_counter=0
 
             if self._cur_year_dict_index==len(self._dates):
@@ -1010,13 +1078,16 @@ class SolarSystem:
                     if planet!='sun':
                         temp_obs_planet_id=self._master_planet_dict[planet]['obs_planet_id']
                         if temp_obs_planet_id!=10:
+                            #if planet=='phobos':
+                                #print(self.__gen_pos(self._master_planet_dict[planet]['planet_id'],temp_cur_et,temp_obs_planet_id) + self.__gen_pos(temp_obs_planet_id,temp_cur_et,10))
                             self._master_planet_dict[planet]['entity'].position= self.__gen_pos(self._master_planet_dict[planet]['planet_id'],temp_cur_et,temp_obs_planet_id) + self.__gen_pos(temp_obs_planet_id,temp_cur_et,10)
                         else:
                             self._master_planet_dict[planet]['entity'].position=self.__gen_pos(self._master_planet_dict[planet]['planet_id'],temp_cur_et,temp_obs_planet_id)           
                     self._master_planet_dict[planet]['sibling_entity'].position=self._master_planet_dict[planet]['entity'].position
                     self._master_planet_dict[planet]['text_tag_entity'].world_position=self._master_planet_dict[planet]['sibling_entity'].position
                     self._master_planet_dict[planet]['text_tag_entity'].world_scale=abs(camera.z) * 0.50
-                    self._master_planet_dict[planet]['entity'].rotate(Vec3(0,
+                    if self._start:
+                        self._master_planet_dict[planet]['entity'].rotate(Vec3(0,
                                                                         self._master_planet_dict[planet]['axial_rotation']*self._axial_rotation_multiplier[self._date_frequency],
                                                                         0
                                                                         )
@@ -1034,6 +1105,7 @@ class SolarSystem:
                                                                                                     mode=self._curve_mode,
                                                                                                     thickness=self._thick
                                                                                                     ),
+                                                                                        unlit=True,
                                                                                         color=self._master_planet_dict[planet]['trail_color'] 
                                                                                         )  
                             except:
@@ -1047,11 +1119,23 @@ logo.animate_color(color.white, duration=4, delay=2, curve=curve.out_quint_boome
 camera.overlay.animate_color(color.clear, duration=2, delay=7)
 destroy(logo, delay=10)
 
+#window.render_mode ='wireframe'
+window._vsync=True
 window.color=color.black
 window._icon='../Assets/Solar-sys.ico'
 window._title='Project Shunya'
 solarsystem=SolarSystem()
 solarsystem.load_widgets()
+def ursina_window_exit():
+    global window
+    #print('hello')
+    try:
+        app.graphicsEngine.removeWindow(app.win)
+    except:
+        pass    
+    
+window.exit_button.on_click=ursina_window_exit    
+
 def input(key):
     solarsystem.custom_input(key)
 def update():
@@ -1063,4 +1147,4 @@ app.run()
 
 
 
-                        
+
