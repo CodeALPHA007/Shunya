@@ -417,7 +417,9 @@ class SolarSystem:
         if planet_name=='free':
             self._toggle_free=True
             camera.parent=scene
-            camera.position=Vec3(0,0,self._default_zoom)
+            camera.world_position=Vec3(0,0,self._default_zoom)
+            camera.world_rotation=Vec3(0,0,0)
+            camera.look_at(self._master_planet_dict['sun']['entity'])
             self._current_focus=None
             for i in self._master_planet_dict.keys():
                 self._master_planet_dict[i]['text_tag_entity'].visible=True
@@ -436,11 +438,14 @@ class SolarSystem:
     def __focus(self,planet_name: str):
         if planet_name==None:
                 self._mouse_enabled_movement=False
+                camera.look_at(self._master_planet_dict['sun']['entity'])
                 camera.parent=scene
-                camera.look_at(self._master_planet_dict['sun']['sibling_entity'])
-                camera.position=(0,10,self._default_zoom)
-                camera.look_at(self._master_planet_dict['sun']['sibling_entity'])
-                camera.always_on_top_setter(True)
+                camera.world_rotation=Vec3(0,0,0)
+                camera.world_position=Vec3(0,0,self._default_zoom)
+                print([self._master_planet_dict['sun']['entity'].world_position,camera.world_position])
+                camera.look_at(self._master_planet_dict['sun']['entity'])
+                
+                #camera.always_on_top_setter(True)
                 self._master_planet_dict['sun']['follow']=False
                 self._info._visible=False
                 
@@ -452,7 +457,7 @@ class SolarSystem:
             camera.position=Vec3(0,0,self._default_zoom)
             camera.rotation=Vec3(0,0,0)
             camera.parent=self._master_planet_dict[planet_name]['sibling_entity']
-            camera.always_on_top_setter(True)
+            #camera.always_on_top_setter(True)
             camera.position=Vec3(0,0,0)
             camera.z=self._default_zoom
             
