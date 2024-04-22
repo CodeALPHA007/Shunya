@@ -14,9 +14,9 @@ import webbrowser
 from collections import deque
 import qdarktheme
 
-L='Hello World. This is a dynamic Text Box.'
-d=deque([' ' for i in range(400)],maxlen=400)
+L='Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.'
 l=len(L)
+d=deque([' ' for i in range(l+50)],maxlen=l+50)
 
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
