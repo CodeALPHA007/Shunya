@@ -70,7 +70,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.try_now(self)
-        self.showMaximized() 
+        #self.showMaximized()
+        self.showFullScreen() 
         self.dlg=loadUi(r"..\Assets\dial_1.ui")
         self.dialog=loadUi(r"..\Assets\dial_2.ui")
         self.dial=loadUi(r"..\Assets\dial_3.ui")
@@ -102,6 +103,9 @@ class MainWindow(QMainWindow):
         self.settings_button.setIcon(QIcon("..\\Assets\\settings.png"))
         self.settings_button.clicked.connect(self.show_dialog)
 
+        self.close_btn.setIcon(QIcon("..\\Assets\\close.png"))
+        self.close_btn.clicked.connect(self.call)
+
         self.insta_btn.setIcon(QIcon("..\\Assets\\insta.png"))
         self.insta_btn.clicked.connect(lambda: self.show_web('https://www.instagram.com/teamshunya1114/?hl=en'))
 
@@ -122,6 +126,8 @@ class MainWindow(QMainWindow):
         self.image_label.setPixmap(qt_img)
         self.image_label.resize(1450, self.height())
         
+    def call(self):
+        self.close()
 
     def update_txt(self,t):
         global d
