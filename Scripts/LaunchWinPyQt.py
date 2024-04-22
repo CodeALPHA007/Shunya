@@ -15,7 +15,7 @@ from collections import deque
 import qdarktheme
 
 L='Hello World. This is a dynamic Text Box.'
-d=deque([' ' for i in range(200)],maxlen=200)
+d=deque([' ' for i in range(400)],maxlen=400)
 l=len(L)
 
 class VideoThread(QThread):
@@ -70,6 +70,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.try_now(self)
+        self.showMaximized() 
         self.dlg=loadUi(r"..\Assets\dial_1.ui")
         self.dialog=loadUi(r"..\Assets\dial_2.ui")
         self.dial=loadUi(r"..\Assets\dial_3.ui")
@@ -102,7 +103,7 @@ class MainWindow(QMainWindow):
         self.settings_button.clicked.connect(self.show_dialog)
 
         self.insta_btn.setIcon(QIcon("..\\Assets\\insta.png"))
-        self.insta_btn.clicked.connect(lambda: self.show_web('https://www.facebook.com/'))
+        self.insta_btn.clicked.connect(lambda: self.show_web('https://www.instagram.com/teamshunya1114/?hl=en'))
 
         self.ln_btn.setIcon(QIcon("..\\Assets\\linkedin.png"))
         self.ln_btn.clicked.connect(lambda: self.show_web('https://www.linkedin.com/in/team-shunya-95b6a4304/'))
@@ -117,7 +118,10 @@ class MainWindow(QMainWindow):
     def update_image(self, cv_img):
         """Updates the image_label with a new opencv image"""
         qt_img = self.convert_cv_qt(cv_img)
+        qt_img = qt_img.scaled(1450, self.height())
         self.image_label.setPixmap(qt_img)
+        self.image_label.resize(1450, self.height())
+        
 
     def update_txt(self,t):
         global d
@@ -148,7 +152,8 @@ class MainWindow(QMainWindow):
         if fname[0] != "":
             print(fname[0])
             self.image_label.hide()
-            self._label.setPixmap(QtGui.QPixmap(r'{}'.format(fname[0])).scaled(1080, 572, QtCore.Qt.KeepAspectRatio))
+            self._label.setPixmap(QtGui.QPixmap(r'{}'.format(fname[0])).scaled(1450, 770, QtCore.Qt.KeepAspectRatio))
+            self._label.resize(1450, 770)
         #self.filename.setText(fname[0])
     
     def donotshow(self):
