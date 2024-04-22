@@ -29,9 +29,9 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>540</x>
-      <y>190</y>
-      <width>261</width>
+      <x>577</x>
+      <y>290</y>
+      <width>201</width>
       <height>91</height>
      </rect>
     </property>
@@ -39,8 +39,9 @@
      <enum>Qt::WheelFocus</enum>
     </property>
     <property name="styleSheet">
-     <string notr="true">font: 36pt &quot;Nirmala UI&quot;;
-color:white;background-color:none;border:none;</string>
+     <string notr="true">font: 75 40pt &quot;Consolas&quot;;
+background-color: none;
+color:white;border:none;</string>
     </property>
     <property name="frameShape">
      <enum>QFrame::StyledPanel</enum>
@@ -58,8 +59,8 @@ color:white;background-color:none;border:none;</string>
    <widget class="QPushButton" name="button1">
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>300</y>
+      <x>585</x>
+      <y>400</y>
       <width>181</width>
       <height>51</height>
      </rect>
@@ -68,11 +69,11 @@ color:white;background-color:none;border:none;</string>
      <string notr="true">color:white;
 border: 0.5px solid white;
 border-radius:20px;
-background-color:none;
-font: 75 16pt &quot;Modern&quot;;</string>
+background-color:rgba(0, 0, 0,170);
+font: 75 18pt &quot;Modern&quot;;</string>
     </property>
     <property name="text">
-     <string>Start</string>
+     <string>S T A R T</string>
     </property>
    </widget>
    <widget class="QLabel" name="image_label">
@@ -100,7 +101,7 @@ font: 75 16pt &quot;Modern&quot;;</string>
    <widget class="QPushButton" name="button2">
     <property name="geometry">
      <rect>
-      <x>1000</x>
+      <x>900</x>
       <y>20</y>
       <width>101</width>
       <height>41</height>
@@ -111,7 +112,7 @@ font: 75 16pt &quot;Modern&quot;;</string>
     </property>
     <property name="styleSheet">
      <string notr="true">color:white;;background-color:none;border:none;
-font: 12pt &quot;Modern&quot;;</string>
+font: 75 14pt &quot;Verdana&quot;;</string>
     </property>
     <property name="text">
      <string>About us</string>
@@ -155,7 +156,7 @@ background-color: white;</string>
    <widget class="QPushButton" name="button3">
     <property name="geometry">
      <rect>
-      <x>1100</x>
+      <x>1010</x>
       <y>20</y>
       <width>101</width>
       <height>41</height>
@@ -163,7 +164,7 @@ background-color: white;</string>
     </property>
     <property name="styleSheet">
      <string notr="true">color:white;;background-color:none;border:none;
-font: 12pt &quot;Modern&quot;;</string>
+font: 75 14pt &quot;Verdana&quot;;</string>
     </property>
     <property name="text">
      <string>Website</string>
@@ -194,15 +195,15 @@ font: 12pt &quot;Modern&quot;;</string>
    <widget class="QPushButton" name="button4">
     <property name="geometry">
      <rect>
-      <x>1200</x>
+      <x>1120</x>
       <y>20</y>
-      <width>101</width>
+      <width>131</width>
       <height>41</height>
      </rect>
     </property>
     <property name="styleSheet">
      <string notr="true">color:white;;background-color:none;border:none;
-font: 12pt &quot;Modern&quot;;</string>
+font: 75 14pt &quot;Verdana&quot;;</string>
     </property>
     <property name="text">
      <string>User's Guide</string>
@@ -281,7 +282,7 @@ color:white;background-color:none;border:none;</string>
       <x>60</x>
       <y>680</y>
       <width>1271</width>
-      <height>21</height>
+      <height>16</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -306,7 +307,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QPushButton" name="close_btn">
     <property name="geometry">
      <rect>
-      <x>1300</x>
+      <x>1280</x>
       <y>20</y>
       <width>41</width>
       <height>41</height>
@@ -316,13 +317,13 @@ p, li { white-space: pre-wrap; }
      <cursorShape>ArrowCursor</cursorShape>
     </property>
     <property name="toolTip">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Close&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Exit&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="styleSheet">
      <string notr="true">color:red;
 font: italic 10pt &quot;Segoe UI Semilight&quot;;
 border-radius:10px;
-background-color: white;</string>
+background-color: black;</string>
     </property>
     <property name="text">
      <string/>
