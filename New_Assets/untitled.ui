@@ -100,7 +100,7 @@ font: 75 16pt &quot;Modern&quot;;</string>
    <widget class="QPushButton" name="button2">
     <property name="geometry">
      <rect>
-      <x>1060</x>
+      <x>1000</x>
       <y>20</y>
       <width>101</width>
       <height>41</height>
@@ -155,7 +155,7 @@ background-color: white;</string>
    <widget class="QPushButton" name="button3">
     <property name="geometry">
      <rect>
-      <x>1140</x>
+      <x>1100</x>
       <y>20</y>
       <width>101</width>
       <height>41</height>
@@ -194,7 +194,7 @@ font: 12pt &quot;Modern&quot;;</string>
    <widget class="QPushButton" name="button4">
     <property name="geometry">
      <rect>
-      <x>1240</x>
+      <x>1200</x>
       <y>20</y>
       <width>101</width>
       <height>41</height>
@@ -303,6 +303,40 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;yudgf&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="close_btn">
+    <property name="geometry">
+     <rect>
+      <x>1300</x>
+      <y>20</y>
+      <width>41</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>ArrowCursor</cursorShape>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Close&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:red;
+font: italic 10pt &quot;Segoe UI Semilight&quot;;
+border-radius:10px;
+background-color: white;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="autoDefault">
+     <bool>false</bool>
+    </property>
+    <property name="default">
+     <bool>false</bool>
+    </property>
+    <property name="flat">
+     <bool>false</bool>
+    </property>
+   </widget>
    <zorder>_label</zorder>
    <zorder>image_label</zorder>
    <zorder>label</zorder>
@@ -315,6 +349,7 @@ p, li { white-space: pre-wrap; }
    <zorder>ln_btn</zorder>
    <zorder>label_2</zorder>
    <zorder>dt</zorder>
+   <zorder>close_btn</zorder>
   </widget>
  </widget>
  <resources/>
