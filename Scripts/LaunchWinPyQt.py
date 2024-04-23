@@ -51,8 +51,8 @@ class VideoThread(QThread):
                 temp="".join([e for e in d])
                 #If the last frame is reached, reset the capture and the frame_counter
                 if frame_counter == (cap.get(cv2.CAP_PROP_FRAME_COUNT)-5):
-                     frame_counter = 0 #Or whatever as long as it is the same as next line
-                     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    frame_counter = 0 #Or whatever as long as it is the same as next line
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 if ret:
                     self.change_pixmap_signal.emit(cv_img)
                     self.change_text.emit(temp)
@@ -150,6 +150,10 @@ class MainWindow(QMainWindow):
         self.dial.exec_()
     
     def show_about(self):
+        self.dialog.RM.clicked.connect(lambda: self.show_web('https://www.linkedin.com/in/rupayanmandal/'))
+        self.dialog.SS.clicked.connect(lambda: self.show_web('https://www.linkedin.com/in/satyaki-saha-550224244/'))
+        self.dialog.AB.clicked.connect(lambda: self.show_web('https://www.linkedin.com/in/atreyee-bandyopadhyay-672825205/'))
+        self.dialog.Coffee.clicked.connect(lambda: self.show_web('https://www.youtube.com/'))
         self.dialog.exec_()
     
     def change(self):
