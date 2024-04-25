@@ -40,6 +40,5 @@ if __name__ == "__main__":
     download_file_from_google_drive(destination)
     shutil.unpack_archive(filename='./extracts/temp.rar',extract_dir="./extracts",format="zip")
     print("Hello")
-    input()
     shutil.rmtree('extracts',ignore_errors=True)
     
