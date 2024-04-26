@@ -373,7 +373,7 @@ Available!</string>
      <bool>false</bool>
     </property>
    </widget>
-   <widget class="QLabel" name="label_3">
+   <widget class="QLabel" name="version_label">
     <property name="geometry">
      <rect>
       <x>210</x>
@@ -409,7 +409,7 @@ border: none;</string>
    <zorder>dt</zorder>
    <zorder>close_btn</zorder>
    <zorder>version_btn</zorder>
-   <zorder>label_3</zorder>
+   <zorder>version_label</zorder>
   </widget>
  </widget>
  <resources/>
