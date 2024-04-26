@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1412</width>
-    <height>734</height>
+    <height>716</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -79,7 +79,7 @@ font: 75 18pt &quot;Modern&quot;;</string>
    <widget class="QLabel" name="image_label">
     <property name="geometry">
      <rect>
-      <x>-80</x>
+      <x>-60</x>
       <y>0</y>
       <width>1491</width>
       <height>750</height>
@@ -341,6 +341,60 @@ background-color: black;</string>
      <bool>false</bool>
     </property>
    </widget>
+   <widget class="QPushButton" name="version_btn">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>160</y>
+      <width>361</width>
+      <height>171</height>
+     </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>ArrowCursor</cursorShape>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 0), stop:0.25 rgba(0,0,0, 170), stop:0.75 rgba(0,0,0, 170), stop:1 rgba(255,255,255,0));
+color:white;
+font: 75 19pt &quot;Courier&quot;;
+border-radius:10px;</string>
+    </property>
+    <property name="text">
+     <string>New Version
+Available!</string>
+    </property>
+    <property name="autoDefault">
+     <bool>false</bool>
+    </property>
+    <property name="default">
+     <bool>false</bool>
+    </property>
+    <property name="flat">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>290</y>
+      <width>121</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: italic 8pt &quot;Constantia&quot;;
+color: white;
+background-color: transparent;
+border: none;</string>
+    </property>
+    <property name="text">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://stellarium.org/&quot;&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;Click here to download...&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="openExternalLinks">
+     <bool>true</bool>
+    </property>
+   </widget>
    <zorder>_label</zorder>
    <zorder>image_label</zorder>
    <zorder>label</zorder>
@@ -354,6 +408,8 @@ background-color: black;</string>
    <zorder>label_2</zorder>
    <zorder>dt</zorder>
    <zorder>close_btn</zorder>
+   <zorder>version_btn</zorder>
+   <zorder>label_3</zorder>
   </widget>
  </widget>
  <resources/>
