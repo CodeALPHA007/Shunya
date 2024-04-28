@@ -135,9 +135,9 @@ class MainWindow(QMainWindow):
     def try_now(self,checked = None):
         global avl_new_version
         loadUi(r"../Assets/untitled.ui",self)
-        self.setWindowTitle("Project Shunya")
+        self.setWindowTitle("Shunya")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMinimizeButtonHint)
-        self.setWindowIcon(QIcon("..\\Assets\\Solar-system.ico"))
+        self.setWindowIcon(QIcon("..\\Assets\\Shunya.ico"))
 
         # create the video capture thread
         self.thread = VideoThread()
@@ -1294,10 +1294,11 @@ class SolarSystem:
                                 pass
 
 
-app=Ursina(title='Project Shunya', icon=r'../Assets/Solar-system.ico',render_mode='onscreen', development_mode=False)
+app=Ursina(title='Shunya', icon=r'../Assets/Shunya.ico',render_mode='onscreen', development_mode=False)
 window.windowed_position=Vec2(137,77)
+window.color=color.black
 camera.overlay.color=color.black
-logo = Sprite(name='ursina_splash', parent=camera.ui, texture='../Assets/logo.jpg', world_z=camera.overlay.z-1, scale=0.25, color=color.clear)
+logo = Sprite(name='ursina_splash', parent=camera.ui, texture=r'../Assets/Shunya.png', world_z=camera.overlay.z-1, scale=0.25, color=color.clear)
 logo.animate_color(color.white, duration=4, delay=2, curve=curve.out_quint_boomerang)
 camera.overlay.animate_color(color.clear, duration=2, delay=7)
 destroy(logo, delay=11)
@@ -1307,9 +1308,8 @@ my_exit_button=Button(texture='../Assets/close.png', eternal=True, ignore_paused
 
 window.size=Vec2(2,1)
 app.step()
-window.color=color.black
 window._icon=r'../Assets/Solar-sys.ico'
-window._title='Project Shunya'
+window._title='Shunya'
 
 while True:
     ursina_start=False
@@ -1325,7 +1325,7 @@ while True:
         window.size=window.fullscreen_size      
         scene.clear()
         camera.overlay.color=color.black
-        logo = Sprite(name='ursina_splash', parent=camera.ui, texture='../Assets/logo.jpg', world_z=camera.overlay.z-1, scale=0.25, color=color.clear)
+        logo = Sprite(name='ursina_splash', parent=camera.ui, texture=r'../Assets/Shunya.png', world_z=camera.overlay.z-1, scale=0.25, color=color.clear)
         logo.animate_color(color.white, duration=4, delay=2, curve=curve.out_quint_boomerang)
         camera.overlay.animate_color(color.clear, duration=2, delay=7)
         destroy(logo, delay=9)
