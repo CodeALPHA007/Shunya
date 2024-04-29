@@ -376,9 +376,9 @@ Available!</string>
    <widget class="QLabel" name="version_label">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>190</x>
       <y>290</y>
-      <width>121</width>
+      <width>161</width>
       <height>20</height>
      </rect>
     </property>
@@ -389,7 +389,7 @@ background-color: transparent;
 border: none;</string>
     </property>
     <property name="text">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://stellarium.org/&quot;&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;Click here to download...&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://shunyathespaceapp.onrender.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#ffffff;&quot;&gt;Click here to go to the website...&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
     <property name="openExternalLinks">
      <bool>true</bool>
