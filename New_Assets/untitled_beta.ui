@@ -398,9 +398,9 @@ border: none;</string>
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>130</y>
-      <width>351</width>
+      <x>450</x>
+      <y>460</y>
+      <width>451</width>
       <height>91</height>
      </rect>
     </property>
@@ -409,7 +409,7 @@ border: none;</string>
     </property>
     <property name="styleSheet">
      <string notr="true">font: 75 36pt &quot;Courier New&quot;;
-background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 3), stop:0.25 rgba(255, 255, 255, 170), stop:0.75 rgba(255, 255, 255, 170), stop:1 rgba(255,255,255,3));
+background-color:qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 255, 255, 0), stop:0.25 rgba(255, 255, 255, 170), stop:0.75 rgba(255, 255, 255, 170), stop:1 rgba(255,255,255,0));
 color:black;border:none;</string>
     </property>
     <property name="frameShape">
@@ -422,7 +422,7 @@ color:black;border:none;</string>
      <number>0</number>
     </property>
     <property name="text">
-     <string>BETA VERSION</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;BETA VERSION&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
    </widget>
    <zorder>_label</zorder>
