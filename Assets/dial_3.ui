@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>538</width>
+    <height>589</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>User's Guide</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(114, 4, 85), stop: 1 rgb(3, 6, 55) )</string>
+  </property>
+  <widget class="QTextBrowser" name="textBrowser">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>20</y>
+     <width>391</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(255, 255, 255);
+font: 12pt &quot;Modern&quot;;
+background-color:transparent;
+border:none;</string>
+   </property>
+   <property name="html">
+    <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Modern'; font-size:12pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:72;&quot;&gt;Use these keys in order to navigate through the Solar System:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </widget>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>60</y>
+     <width>531</width>
+     <height>341</height>
+    </rect>
+   </property>
+   <property name="baseSize">
+    <size>
+     <width>0</width>
+     <height>0</height>
+    </size>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(255, 255, 255);
+background-color:transparent;
+border: none;</string>
+   </property>
+   <property name="lineWidth">
+    <number>1</number>
+   </property>
+   <property name="verticalScrollBarPolicy">
+    <enum>Qt::ScrollBarAlwaysOff</enum>
+   </property>
+   <property name="showGrid">
+    <bool>false</bool>
+   </property>
+   <property name="gridStyle">
+    <enum>Qt::SolidLine</enum>
+   </property>
+   <property name="cornerButtonEnabled">
+    <bool>true</bool>
+   </property>
+   <property name="rowCount">
+    <number>11</number>
+   </property>
+   <property name="columnCount">
+    <number>4</number>
+   </property>
+   <attribute name="horizontalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
+   <attribute name="verticalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
+   <row>
+    <property name="text">
+     <string>1</string>
+    </property>
+   </row>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <column/>
+   <column/>
+   <column/>
+   <column/>
+   <item row="0" column="0">
+    <property name="text">
+     <string>Toggle Manual</string>
+    </property>
+   </item>
+   <item row="0" column="1">
+    <property name="text">
+     <string>: Tab</string>
+    </property>
+   </item>
+   <item row="1" column="0">
+    <property name="text">
+     <string>zoom in</string>
+    </property>
+   </item>
+   <item row="1" column="1">
+    <property name="text">
+     <string>: w/scroll up</string>
+    </property>
+   </item>
+   <item row="1" column="2">
+    <property name="text">
+     <string>zoom out</string>
+    </property>
+   </item>
+   <item row="1" column="3">
+    <property name="text">
+     <string>: s/scroll down</string>
+    </property>
+   </item>
+   <item row="2" column="0">
+    <property name="text">
+     <string>camera move left</string>
+    </property>
+   </item>
+   <item row="2" column="1">
+    <property name="text">
+     <string>: a</string>
+    </property>
+   </item>
+   <item row="2" column="2">
+    <property name="text">
+     <string>camera move right</string>
+    </property>
+   </item>
+   <item row="2" column="3">
+    <property name="text">
+     <string>: d</string>
+    </property>
+   </item>
+   <item row="3" column="0">
+    <property name="text">
+     <string>camera move up</string>
+    </property>
+   </item>
+   <item row="3" column="1">
+    <property name="text">
+     <string>: z</string>
+    </property>
+   </item>
+   <item row="3" column="2">
+    <property name="text">
+     <string>camera move down</string>
+    </property>
+   </item>
+   <item row="3" column="3">
+    <property name="text">
+     <string>: x</string>
+    </property>
+   </item>
+   <item row="4" column="0">
+    <property name="text">
+     <string>rotate camera down</string>
+    </property>
+   </item>
+   <item row="4" column="1">
+    <property name="text">
+     <string>: down arrow</string>
+    </property>
+   </item>
+   <item row="4" column="2">
+    <property name="text">
+     <string>rotate camera up</string>
+    </property>
+   </item>
+   <item row="4" column="3">
+    <property name="text">
+     <string>: up arrow</string>
+    </property>
+   </item>
+   <item row="5" column="0">
+    <property name="text">
+     <string>rotate camera left</string>
+    </property>
+   </item>
+   <item row="5" column="1">
+    <property name="text">
+     <string>: left arrow</string>
+    </property>
+   </item>
+   <item row="5" column="2">
+    <property name="text">
+     <string>rotate camera right</string>
+    </property>
+   </item>
+   <item row="5" column="3">
+    <property name="text">
+     <string>: right arrow</string>
+    </property>
+   </item>
+   <item row="6" column="0">
+    <property name="text">
+     <string>rotate camera anti-clockwise</string>
+    </property>
+   </item>
+   <item row="6" column="1">
+    <property name="text">
+     <string>: c</string>
+    </property>
+   </item>
+   <item row="6" column="2">
+    <property name="text">
+     <string>rotate camera clockwise</string>
+    </property>
+   </item>
+   <item row="6" column="3">
+    <property name="text">
+     <string>: v</string>
+    </property>
+   </item>
+   <item row="7" column="0">
+    <property name="text">
+     <string>pause / unpause simulation</string>
+    </property>
+   </item>
+   <item row="7" column="1">
+    <property name="text">
+     <string>: p/P</string>
+    </property>
+   </item>
+   <item row="7" column="2">
+    <property name="text">
+     <string>Toggle pause menu</string>
+    </property>
+   </item>
+   <item row="7" column="3">
+    <property name="text">
+     <string>: Esc</string>
+    </property>
+   </item>
+   <item row="8" column="0">
+    <property name="text">
+     <string>Toggle full screen</string>
+    </property>
+   </item>
+   <item row="8" column="1">
+    <property name="text">
+     <string>: f/F</string>
+    </property>
+   </item>
+   <item row="8" column="2">
+    <property name="text">
+     <string>Toggle trail</string>
+    </property>
+   </item>
+   <item row="8" column="3">
+    <property name="text">
+     <string>: t/T</string>
+    </property>
+   </item>
+   <item row="9" column="0">
+    <property name="text">
+     <string>Enable mouse associated movement</string>
+    </property>
+   </item>
+   <item row="9" column="1">
+    <property name="text">
+     <string>: m/M</string>
+    </property>
+   </item>
+   <item row="9" column="2">
+    <property name="text">
+     <string>deletes trail</string>
+    </property>
+   </item>
+   <item row="9" column="3">
+    <property name="text">
+     <string>: Backspace</string>
+    </property>
+   </item>
+   <item row="10" column="0">
+    <property name="text">
+     <string>Ambient light off/on</string>
+    </property>
+   </item>
+   <item row="10" column="1">
+    <property name="text">
+     <string>: l/L</string>
+    </property>
+   </item>
+   <item row="10" column="2">
+    <property name="text">
+     <string>Start stimulation</string>
+    </property>
+   </item>
+   <item row="10" column="3">
+    <property name="text">
+     <string>: Space</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QTextBrowser" name="textBrowser_2">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>410</y>
+     <width>521</width>
+     <height>131</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(255, 255, 255);
+font: 12pt &quot;Modern&quot;;
+background-color:transparent;
+border:none;</string>
+   </property>
+   <property name="html">
+    <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Modern'; font-size:12pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rotate camera left and right : Left click / Right click&lt;/p&gt;
+&lt;p align=&quot;justify&quot; style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rotate camera up and down  : Ctrl + Left / Right click&lt;/p&gt;
+&lt;p align=&quot;justify&quot; style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p align=&quot;justify&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Rotate camera around axis   : Alt + Left / Right click&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </widget>
+  <zorder>textBrowser_2</zorder>
+  <zorder>tableWidget</zorder>
+  <zorder>textBrowser</zorder>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
