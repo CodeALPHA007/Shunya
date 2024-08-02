@@ -37,14 +37,15 @@ avl_new_version=False
 
 version='v1.1.0'
 
-with open("version.txt",'r') as cur_ver:
-    temp=cur_ver.read().strip()
-    if version!=temp:
-        avl_new_version=True
+try:
+    with open("version.txt",'r') as cur_ver:
+        temp=cur_ver.read().strip()
+        if version!=temp:
+            avl_new_version=True
 
-os.system(r'start "" /d "%cd%\dist\Shunya_v1.1.0"  "%cd%\dist\Shunya_v1.1.0\version_control.exe"')
-#os.system(r'start "" /d "E:\Desktop-06.06.2024\python\stellarium\Ursina\Scripts"  "E:\Desktop-06.06.2024\python\stellarium\Ursina\Scripts\version_control.exe"')
-
+    os.system(r'start "" /d "%cd%"  "%cd%\version_control.exe"')
+except:
+    pass
 
 my_credits=["  TEXTURES :  https://www.solarsystemscope.com/textures/",
             "  https://planetpixelemporium.com/",
@@ -53,7 +54,8 @@ my_credits=["  TEXTURES :  https://www.solarsystemscope.com/textures/",
             "  Kernels:  https://naif.jpl.nasa.gov/pub/naif/generic_kernels/"
             ]
 #MAIN WINDOW
-screen_size=(100,100)
+screen_size=(1412,716)
+qt_scale=1
 
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
@@ -112,17 +114,76 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        global screen_size
+        self.screen_size=screen_size
+        self.custom_scale=(self.screen_size[0]/1412,self.screen_size[1]/716)
         self.try_now(self)
         self.setWindowFlags( QtCore.Qt.WindowFlags() | QtCore.Qt.FramelessWindowHint)
         
         self.dlg=loadUi(r"..\Assets\dial_1.ui")
         self.dialog=loadUi(r"..\Assets\dial_2.ui")
-        #self.dial=loadUi(r"..\Assets\dial_3.ui")
-        self.dial=loadUi(r"..\Assets\dial_3_debayan_sir.ui")
+        self.dial=loadUi(r"..\Assets\dial_3.ui")
         self.dlg.slider = QSlider(Qt.Horizontal,self.dlg)
         self.dlg.slider.hide()
         self.label.parent=self
         self.label_2.parent=self
+        self.resizing()
+        self.move(0,0)
+
+
+    def custom_scaling(self,custom_size,scale):  
+        try:
+            temp_size=(int(custom_size[0]*scale[0]),int(custom_size[1]*scale[1]))
+            if 0 in temp_size :
+                return custom_size
+            return temp_size
+        except:
+            return custom_size     
+
+    def resizing(self):
+        custom_widgets = {
+                         "main window":[self,(1412,716),(0,0)],
+                         "_label":[self._label,(1451,756),(0,0)],
+                         "button1":[self.button1,(181,51),(585,350)],
+                         "button2":[self.button2,(101,41),(900,20)],
+                         "button3":[self.button3,(101,41),(1010,20)],
+                         "button4":[self.button4,(131,41),(1120,20)],
+                         "close button":[self.close_btn,(41,41),(1280,20)],
+                         "dt":[self.dt,(1271,16),(60,680)],
+                         "image_label":[self.image_label,(1451,750),(0,0)],
+                         "instagram":[self.insta_btn,(41,41),(620,630)],
+                         "label":[self.label,(201,91),(577,240)],
+                         "label_2":[self.label_2,(61,20),(640,600)],
+                         "linkedin":[self.ln_btn,(41,41),(670,630)],
+                         "settings button":[self.settings_button,(41,41),(30,20)],
+                         "version button":[self.version_btn,(361,171),(90,160)],
+                         "version label":[self.version_label,(161,20),(190,290)],
+                         "change button":[self.dlg.change_btn,(121,41),(40,190)],
+                         "colorbin":[self.dlg.colorbin,(121,41),(40,90)],
+                         "reset button":[self.dlg.reset_button,(41,41),(170,230)],
+                         "slider button":[self.dlg.slider_btn,(121,41),(40,140)],
+                         "theme":[self.dlg.theme_btn,(121,41),(40,40)],
+                         "slider":[self.dlg.slider,(160,16),(250,100)],
+                         "dialog":[self.dialog,(931,560),(190,50)],
+                         "text":[self.dialog.textBrowser,(900,551),(20,10)],
+                         "guide":[self.dial,(620,529),(420,50)],
+                         "table":[self.dial.tableWidget,(600,301),(40,60)],
+                         "text1":[self.dial.textBrowser,(600,45),(30,20)],
+                         "text2":[self.dial.textBrowser_2,(600,131),(40,410)]
+                          }
+        for i in custom_widgets.keys():
+            temp_size=self.custom_scaling(custom_widgets[i][1],self.custom_scale)
+            temp_pos = self.custom_scaling(custom_widgets[i][2],self.custom_scale)
+            custom_widgets[i][0].setFixedSize(temp_size[0],temp_size[1])
+            custom_widgets[i][0].move(temp_pos[0],temp_pos[1])
+        
+        dial1_size=self.custom_scaling((230,300),self.custom_scale)
+        dial1_pos = self.custom_scaling((532,210),self.custom_scale)
+        self.dlg.setMinimumSize(dial1_size[0],dial1_size[1])
+        self.dlg.move(dial1_pos[0],dial1_pos[1])
+        for i in[0,2]:
+            self.dial.tableWidget.resizeColumnToContents(i)
+        #self.dial.tableWidget.resizeColumnToContents(2)
 
     def try_now(self,checked = None):
         global avl_new_version
@@ -139,7 +200,7 @@ class MainWindow(QMainWindow):
         self.thread.change_text.connect(self.update_txt)
         # start the thread
         self.thread.start()
-        self.button1.parent=self    
+        self.button1.parent=self  
         self.button1.clicked.connect(self.show_new)
         self.button2.parent=self
         self.button2.clicked.connect(self.show_about)
@@ -292,9 +353,11 @@ class MainWindow(QMainWindow):
         self.dial.setStyleSheet("background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgb(114, 4, 85), stop: 1 rgb(3, 6, 55) );")
 
     def slide(self):
-        self.dlg.move(470,170)
-        self.dlg.resize(500,300) 
-        self.dlg.slider.setGeometry(250, 100, 160, 16)
+        dial1_size=self.custom_scaling((500,300),self.custom_scale)
+        dial1_pos = self.custom_scaling((470,170),self.custom_scale)
+        self.dlg.move(dial1_pos[0],dial1_pos[1])
+        self.dlg.resize(dial1_size[0],dial1_size[1]) 
+        #self.dlg.slider.setGeometry(250, 100, 160, 16)
         self.dlg.slider.parent=self.dlg
         self.dlg.slider.show()
         # After each value change, slot "scaletext" will get invoked. 
